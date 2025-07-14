@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.69
+  Version: 1.9.70
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3083460 2024-05-08 16:35:13Z WayneAllen $
+  $Id: postie.php 3327742 2025-07-14 18:15:42Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
@@ -39,11 +39,11 @@ $plugin_data = get_file_data(__FILE__, array('Version' => 'Version'), false);
 $plugin_version = $plugin_data['Version'];
 
 define('POSTIE_VERSION', $plugin_version);
-define('POSTIE_ROOT', dirname(__FILE__));
-define('POSTIE_URL', WP_PLUGIN_URL . '/' . basename(dirname(__FILE__)));
+define('POSTIE_ROOT', __DIR__);
+define('POSTIE_URL', plugin_dir_url(__FILE__));
 
-require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-compatibility.php');
-require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-api.php');
+require_once(__DIR__ . DIRECTORY_SEPARATOR . 'postie-compatibility.php');
+require_once(__DIR__ . DIRECTORY_SEPARATOR . 'postie-api.php');
 
 if (!class_exists('PostieInit')) {
 
@@ -216,7 +216,7 @@ if (!class_exists('PostieInit')) {
             if (strpos($file, strval(plugin_basename(__FILE__))) !== false) {
                 $new_links = array(
                     '<a href="http://postieplugin.com/" target="_blank">Support</a>',
-                    '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPK99BJ88V4C2" target="_blank">Donate</a>'
+                    '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=s-xclick&hosted_button_id=HPK99BJ88V4C2" target="_blank">Donate</a>'
                 );
 
                 $links = array_merge($links, $new_links);
@@ -235,7 +235,7 @@ if (!class_exists('PostieInit')) {
                         postie_test_config();
                         die();
                     default :
-                        dir('Unknown option: ' . $wp->query_vars['postie']);
+                        die('Unknown option: ' . htmlentities($wp->query_vars['postie']));
                 }
             }
         }
@@ -255,7 +255,7 @@ if (!class_exists('PostieInit')) {
             <style type="text/css">
                 #adminmenu #toplevel_page_postie-settings div.wp-menu-image:before {
                     content: "\f466";
-                }    
+                }
             </style>
             <?php
 
@@ -263,14 +263,7 @@ if (!class_exists('PostieInit')) {
 
         function whitelist_options_filter($options) {
             $added = array('postie-settings' => array('postie-settings'));
-
-            if (function_exists('add_allowed_options')) {
-                $options = add_allowed_options($added, $options);
-            } else {
-                $options = add_option_whitelist($added, $options); // deprecated in WP 5.5
-            }
-
-            return $options;
+            return add_allowed_options($added, $options);
         }
 
         function cron_schedules_filter($schedules) {
@@ -402,7 +395,7 @@ if (!class_exists('PostieInit')) {
             if (function_exists('curl_version')) {
                 $cv = curl_version();
             } else {
-                $cv = '1.0.0';
+                $cv['version'] = '1.0.0';
             }
             if ($config['input_connection'] == 'curl' && !version_compare($cv['version'], '7.30.0', 'ge')) {
                 add_action('admin_notices', array($this, 'postie_curl_warning'));
@@ -413,7 +406,6 @@ if (!class_exists('PostieInit')) {
                 add_action('admin_notices', array($this, 'postie_adminuser_warning'));
             }
         }
-
     }
 
     global $g_postie_init; //need to declare as global for wp cli

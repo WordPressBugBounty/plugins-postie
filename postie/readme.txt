@@ -6,8 +6,8 @@ Plugin URI: http://PostiePlugin.com/
 Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
-Tested up to: 6.4
-Stable tag: 1.9.69
+Tested up to: 6.8
+Stable tag: 1.9.70
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -107,6 +107,10 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.70 (future) =
+* Additional clarification of draft status with unknown emails
+* General improvements
+
 = 1.9.69 (2024-05-08) =
 * Additional logging
 * Make sure default user is set if no user is found

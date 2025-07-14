@@ -3,7 +3,7 @@
 
         <tr>
             <th scope="row">
-                <?php _e('Roles That Can Post', 'postie') ?><br />
+                <?php _e('Roles That Can Publish Posts', 'postie') ?><br />
             </th>
             <td>
                 <table class="checkbox-table">
@@ -31,13 +31,12 @@
                         }
                     }
                     ?>
-                    <p class='description'><?php _e("This allows you to grant access to other users to post if they have the proper access level. Administrators can always post.", 'postie'); ?></p>
-
                 </table>
+                <p class='description'><?php _e("This allows you to grant access to other users to publish posts if they have the proper access level. Administrators can always publish posts. Email addresses that don't exist or don't have permissions will create posts with draftatus s so you can review.", 'postie'); ?></p>
             </td>
         </tr>
 
-        <?php echo PostieAdmin::textarea_html(__("Authorized Addresses", 'postie'), "postie-settings[authorized_addresses]", $authorized_addresses, __("(optional) Put each email address on a single line. Posts from emails in this list will be treated as if they came from the admin. If you would prefer to have users post under their own name - create a WordPress user with the correct access level.", 'postie')); ?>
+        <?php echo PostieAdmin::textarea_html(__("Authorized Addresses", 'postie'), "postie-settings[authorized_addresses]", $authorized_addresses, __("(optional) Put each email address on a single line. Posts from emails in this list will be treated as if they came from the admin. If you would prefer to have users post under their own name - create a WordPress user with the correct access level. Emails that don't match will cause the post to be created with draft status.", 'postie')); ?>
         <tr> 
             <th scope="row"><?php _e('Default Poster', 'postie') ?></th> 
             <td>
