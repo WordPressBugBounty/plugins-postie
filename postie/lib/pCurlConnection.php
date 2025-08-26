@@ -135,12 +135,12 @@ class pCurlConnection extends pConnection {
             }
         }
 
-        DebugEcho("curl read (" . count($response) . ') :' . array_pop((array_slice($response, -1))));
+        $d = array_slice($response, -1);
+        DebugEcho("curl read (" . count($response) . ') :' . array_pop($d));
         return $response;
     }
 
     public function isPersistant() {
         return false;
     }
-
 }

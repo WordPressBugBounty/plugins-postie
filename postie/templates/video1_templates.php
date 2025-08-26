@@ -80,5 +80,5 @@ $vshortcode = '[video width="568" height="320" {FILETYPE}="{FILELINK}"][/video]'
 
 $simple_link = '<a href="{FILELINK}">{FILENAME}</a>';
 
-$custom = isset($config) ? (array_key_exists('VIDEO1TEMPLATE', $config) ? $config['VIDEO1TEMPLATE'] : "") : "";
+$custom = wp_kses_post(isset($config) ? (array_key_exists('VIDEO1TEMPLATE', $config) ? $config['VIDEO1TEMPLATE'] : "") : "");
 $video1Templates = compact('simple_link', 'small', 'medium', 'medium_widescreen', 'large', 'large_widescreen', 'vshortcode', 'custom');

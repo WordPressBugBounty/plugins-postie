@@ -79,5 +79,5 @@ $flv_embed = '[flv:{FILELINK} 480 270]';
 
 $simple_link = '<a href="{FILELINK}">{FILENAME}</a>';
 
-$custom = isset($config) ? (array_key_exists('VIDEO2TEMPLATE', $config) ? $config['VIDEO2TEMPLATE'] : "") : "";
+$custom = wp_kses_post(isset($config) ? (array_key_exists('VIDEO2TEMPLATE', $config) ? $config['VIDEO2TEMPLATE'] : "") : "");
 $video2Templates = compact('simple_link', 'small', 'medium', 'medium_widescreen', 'large', 'large_widescreen', 'flv_embed', 'custom');

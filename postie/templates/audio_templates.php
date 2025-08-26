@@ -7,6 +7,5 @@ $google_reader = '<embed type="application/x-shockwave-flash" ' .
 
 $simple_link = '<a href="{FILELINK}">{FILENAME}</a>';
 
-$custom = isset($config) ? (array_key_exists('AUDIOTEMPLATE', $config) ? $config['AUDIOTEMPLATE'] : "") : "";
+$custom = wp_kses_post(isset($config) ? (array_key_exists('AUDIOTEMPLATE', $config) ? $config['AUDIOTEMPLATE'] : "") : "");
 $audioTemplates = compact('google_reader', 'simple_link', 'custom');
-?>

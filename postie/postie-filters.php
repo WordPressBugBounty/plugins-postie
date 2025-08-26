@@ -48,7 +48,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                     DebugEcho("filter_AttachmentTemplates: post filter '$template'");
                     $template = mb_str_replace('{CAPTION}', '', $template);
                     DebugEcho("filter_AttachmentTemplates: post caption '$template'");
-                    $html .= $template;
+                    $html .= wp_kses_post($template);
                 }
             } else {
                 DebugEcho("filter_AttachmentTemplates: skip attachment " . $attachment['wp_filename']);
@@ -78,7 +78,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                     }
                     $template = mb_str_replace('{CAPTION}', '', $template);
                     DebugEcho("filter_AttachmentTemplates: post filter (alt) '$template'");
-                    $html .= $template;
+                    $html .= wp_kses_post($template);
                 }
             } else {
                 DebugEcho("filter_AttachmentTemplates: skip attachment (alt) " . $attachment['wp_filename']);

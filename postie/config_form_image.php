@@ -40,7 +40,7 @@
                                     if ($key == 'custom')
                                         $value = $imagetemplate;
                                     echo '<option' . $select . 'value="' .
-                                    esc_attr($value) . '" >' . $key . '</option>';
+                                    esc_attr(wp_kses_post($value)) . '" >' . $key . '</option>';
                                 }
                             }
                             ?>
@@ -52,7 +52,7 @@
                 <div id='imageTemplatePreview'></div>
                 <textarea onchange='changeStyle("imageTemplatePreview", "postie-settings-imagetemplate", "imagetemplateselect",
                                 "postie-settings-selected_imagetemplate", "smiling.jpg", true);' cols='70' rows='7' id='postie-settings-imagetemplate' name='postie-settings[imagetemplate]'>
-                          <?php echo esc_attr($imagetemplate) ?>
+                          <?php echo esc_attr(wp_kses_post($imagetemplate)) ?>
                 </textarea>
                 <div class='recommendation'>
                     <ul>
