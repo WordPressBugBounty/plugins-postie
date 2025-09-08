@@ -35,6 +35,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.72 (2025-09-08) =
+* Add error handling to action/filter calls
+
 = 1.9.71 (2025-08-25) =
 * address security issue with custom templates
 

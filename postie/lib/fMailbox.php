@@ -123,7 +123,7 @@ class fMailbox {
                             '=' => '%',
                             '_' => ' '
                                         )
-                        ));
+                                ));
                         //DebugEcho("decodeHeader: Q encoding: '$part_string'");
                     } else {
                         $part_string = base64_decode($match[3]);
@@ -1047,7 +1047,12 @@ class fMailbox {
         $this->connect();
 
         $source = $this->fetchMessageSource($uid);
-        do_action('postie_raw', $source);
+        try {
+            DebugEcho('Starting postie_raw');
+            do_action('postie_raw', $source);
+        } catch (Exception $exc) {
+            error_log('postie_raw: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+        }
 
         $info = self::parseMessage($source, $convert_newlines);
         $info['uid'] = $uid;
@@ -1140,7 +1145,6 @@ class fMailbox {
 
         return $this->connection->write($command, $expected);
     }
-
 }
 
 /**

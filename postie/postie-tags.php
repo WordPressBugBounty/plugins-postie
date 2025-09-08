@@ -332,7 +332,12 @@ function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
             foreach ($matches[1] as $match) {
                 DebugEcho("tag_Categories: checking: $match");
 
-                $trial_category = apply_filters('postie_category', trim($match), $category_match, $defaultcat_name);
+                $trial_category='';
+                try {
+                    $trial_category = apply_filters('postie_category', trim($match), $category_match, $defaultcat_name);
+                } catch (Exception $exc) {
+                    EchoError('postie_category: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+                }
                 DebugEcho("tag_Categories: post postie_category: $trial_category");
 
                 $categoryid = postie_lookup_category_id($trial_category, $category_match);

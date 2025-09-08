@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 6.8
-Stable tag: 1.9.71
+Stable tag: 1.9.72
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -107,6 +107,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.72 (2025-09-08) =
+* Add error handling to action/filter calls
+
 = 1.9.71 (2025-08-25) =
 * address security issue with custom templates
 

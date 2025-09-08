@@ -58,8 +58,12 @@ class Postie {
         }
         add_filter('intermediate_image_sizes_advanced', array($this, 'intermediate_image_sizes_advanced'));
 
-        DebugEcho("doing postie_session_start");
-        do_action('postie_session_start');
+        try {
+            DebugEcho("doing postie_session_start");
+            do_action('postie_session_start');
+        } catch (Exception $exc) {
+            EchoError('postie_session_start: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+        }
 
         DebugEcho('Starting mail fetch');
         DebugEcho('WordPress datetime: ' . current_time('mysql'));
@@ -92,8 +96,12 @@ class Postie {
 
         $this->fetch_mail($conninfo['mail_server'], $conninfo['mail_port'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_protocol'], $conninfo['email_delete_after_processing'], $conninfo['email_max']);
 
-        DebugEcho("doing postie_session_end");
-        do_action('postie_session_end');
+        try {
+            DebugEcho("doing postie_session_end");
+            do_action('postie_session_end');
+        } catch (Exception $exc) {
+            EchoError('postie_session_end: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+        }
 
         if (function_exists('memory_get_usage')) {
             DebugEcho('memory at end of email processing: ' . memory_get_usage());
@@ -119,7 +127,7 @@ class Postie {
             return;
         }
         DebugEcho("Registered filters for $hook");
-        //DebugDump($wp_filter[$hook]->callbacks);
+        DebugDump($wp_filter[$hook]->callbacks);
     }
 
     function save_email_debug($raw, $email) {
@@ -581,7 +589,6 @@ class Postie {
         <?php
         DebugEcho("Test complete");
     }
-
 }
 
 global $g_postie; //need to declare as global for wp cli

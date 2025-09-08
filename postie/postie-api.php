@@ -27,7 +27,11 @@ function EchoError($v) {
     if (!empty($g_postie)) {
         $g_postie->log_error($v);
     }
-    do_action('postie_log_debug', $v);
+    try {
+        do_action('postie_log_debug', $v);
+    } catch (Exception $exc) {
+        echo('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+    }
 }
 
 function DebugDump($v) {
@@ -36,7 +40,11 @@ function DebugDump($v) {
     if (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG && !empty($g_postie)) {
         $g_postie->log_onscreen($d);
     }
-    do_action('postie_log_debug', $d);
+    try {
+        do_action('postie_log_debug', $d);
+    } catch (Exception $exc) {
+        EchoError('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+    }
 }
 
 function DebugEcho($v, $force = false) {
@@ -46,7 +54,11 @@ function DebugEcho($v, $force = false) {
             $g_postie->log_onscreen($v);
         }
     }
-    do_action('postie_log_debug', $v);
+    try {
+        do_action('postie_log_debug', $v);
+    } catch (Exception $exc) {
+        EchoError('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+    }
 }
 
 function postie_config_read() {

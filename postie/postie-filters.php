@@ -39,11 +39,19 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                     $template = $attachment['template'];
                     DebugEcho("filter_AttachmentTemplates: pre filter '$template'");
                     if ($config['images_append']) {
-                        DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
-                        $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
+                        try {
+                            DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
+                            $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
+                        } catch (Exception $exc) {
+                            EchoError('postie_place_media_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+                        }
                     } else {
-                        DebugEcho("filter_AttachmentTemplates: pre postie_place_media_before");
-                        $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
+                        try {
+                            DebugEcho("filter_AttachmentTemplates: pre postie_place_media_before");
+                            $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
+                        } catch (Exception $exc) {
+                            EchoError('postie_place_media_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+                        }
                     }
                     DebugEcho("filter_AttachmentTemplates: post filter '$template'");
                     $template = mb_str_replace('{CAPTION}', '', $template);
@@ -70,11 +78,19 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                 } else {
                     $template = $attachment['template'];
                     if ($config['images_append']) {
-                        DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
-                        $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
+                        try {
+                            DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
+                            $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
+                        } catch (Exception $exc) {
+                            EchoError('postie_place_media_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+                        }
                     } else {
                         DebugEcho("filter_AttachmentTemplates: pre postie_place_media_before");
-                        $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
+                        try {
+                            $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
+                        } catch (Exception $exc) {
+                            EchoError('postie_place_media_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+                        }
                     }
                     $template = mb_str_replace('{CAPTION}', '', $template);
                     DebugEcho("filter_AttachmentTemplates: post filter (alt) '$template'");
@@ -127,11 +143,19 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
         DebugEcho("filter_AttachmentTemplates: Auto gallery: link type $linktype");
         $g_postie->show_filters_for('postie_gallery');
         if ($linktype == 'default') {
-            DebugEcho("filter_AttachmentTemplates: pre postie_gallery (default)");
-            $imageTemplate = apply_filters('postie_gallery', '[gallery]', $post_id);
+            try {
+                DebugEcho("filter_AttachmentTemplates: pre postie_gallery (default)");
+                $imageTemplate = apply_filters('postie_gallery', '[gallery]', $post_id);
+            } catch (Exception $exc) {
+                EchoError('postie_gallery: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+            }
         } else {
-            DebugEcho("filter_AttachmentTemplates: pre postie_gallery ($linktype)");
-            $imageTemplate = apply_filters('postie_gallery', "[gallery link='$linktype']", $post_id);
+            try {
+                DebugEcho("filter_AttachmentTemplates: pre postie_gallery ($linktype)");
+                $imageTemplate = apply_filters('postie_gallery', "[gallery link='$linktype']", $post_id);
+            } catch (Exception $exc) {
+                EchoError('postie_gallery: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+            }
         }
         DebugEcho("filter_AttachmentTemplates: Auto gallery: template '$imageTemplate'");
         if ($config['images_append']) {
@@ -531,8 +555,12 @@ function filter_ReplaceImagePlaceHolders_worker($content, &$attachment, $imagePa
                 wp_update_post($img);
                 DebugEcho("filter_ReplaceImagePlaceHolders_worker: caption added to metadata");
             }
-            $imageTemplate = apply_filters('postie_place_media', $imageTemplate, $attachment['wp_id']);
-            DebugEcho("filter_ReplaceImagePlaceHolders_worker: post postie_place_media: '$imageTemplate'");
+            try {
+                $imageTemplate = apply_filters('postie_place_media', $imageTemplate, $attachment['wp_id']);
+                DebugEcho("filter_ReplaceImagePlaceHolders_worker: post postie_place_media: '$imageTemplate'");
+            } catch (Exception $exc) {
+                EchoError('postie_place_media: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+            }
 
             $content = str_ireplace($match[0], $imageTemplate, $content);
             DebugEcho("filter_ReplaceImagePlaceHolders_worker: post replace: $content");
