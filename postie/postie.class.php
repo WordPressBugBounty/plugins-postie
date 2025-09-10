@@ -61,7 +61,7 @@ class Postie {
         try {
             DebugEcho("doing postie_session_start");
             do_action('postie_session_start');
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_session_start: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -99,7 +99,7 @@ class Postie {
         try {
             DebugEcho("doing postie_session_end");
             do_action('postie_session_end');
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_session_end: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -235,7 +235,7 @@ class Postie {
             $mailbox->close();
 
             DebugEcho("Mail fetch complete, $message_number emails");
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             EchoError("fetch_mail: " . $e->getMessage());
         }
     }
@@ -556,7 +556,7 @@ class Postie {
                         DebugEcho("Successful " . strtoupper($config['input_protocol']) . " connection on port {$config['mail_server_port']}", true);
                         DebugEcho("# of waiting messages: $m", true);
                         $mailbox->close();
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         EchoError("Unable to connect. The server said: " . $e->getMessage());
                     }
                     break;
@@ -575,7 +575,7 @@ class Postie {
                         DebugEcho("Successful " . strtoupper($config['input_protocol']) . " connection on port {$config['mail_server_port']}", true);
                         DebugEcho("# of waiting messages: $m", true);
                         $mailbox->close();
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         EchoError("Unable to connect. The server said:");
                         EchoError($e->getMessage());
                     }

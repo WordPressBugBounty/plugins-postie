@@ -42,14 +42,14 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                         try {
                             DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
                             $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_place_media_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                     } else {
                         try {
                             DebugEcho("filter_AttachmentTemplates: pre postie_place_media_before");
                             $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_place_media_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                     }
@@ -81,14 +81,14 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
                         try {
                             DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
                             $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_place_media_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                     } else {
                         DebugEcho("filter_AttachmentTemplates: pre postie_place_media_before");
                         try {
                             $template = apply_filters('postie_place_media_before', $template, $attachment['wp_id']);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_place_media_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                     }
@@ -146,14 +146,14 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
             try {
                 DebugEcho("filter_AttachmentTemplates: pre postie_gallery (default)");
                 $imageTemplate = apply_filters('postie_gallery', '[gallery]', $post_id);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_gallery: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         } else {
             try {
                 DebugEcho("filter_AttachmentTemplates: pre postie_gallery ($linktype)");
                 $imageTemplate = apply_filters('postie_gallery', "[gallery link='$linktype']", $post_id);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_gallery: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         }
@@ -558,7 +558,7 @@ function filter_ReplaceImagePlaceHolders_worker($content, &$attachment, $imagePa
             try {
                 $imageTemplate = apply_filters('postie_place_media', $imageTemplate, $attachment['wp_id']);
                 DebugEcho("filter_ReplaceImagePlaceHolders_worker: post postie_place_media: '$imageTemplate'");
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_place_media: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
 

@@ -65,7 +65,7 @@ class PostieMessage {
         try {
             DebugEcho("process: filter: Before $action");
             do_action($action);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError("$action: " . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -133,7 +133,7 @@ class PostieMessage {
         try {
             DebugEcho("process: filter: pre postie_post_pre");
             $this->email = apply_filters('postie_post_pre', $this->email);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_post_pre: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -153,13 +153,13 @@ class PostieMessage {
         DebugDump($this->email['headers']);
         try {
             $details = apply_filters('postie_post', $details);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_post: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         try {
             $details = apply_filters('postie_post_before', $details, $this->email['headers']);
             DebugEcho("process: filter: After postie_post_before");
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_post_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugDump($details);
@@ -264,7 +264,7 @@ class PostieMessage {
             try {
                 $from = apply_filters('postie_filter_email', $from);
                 DebugEcho("validate_poster: post postie_filter_email '$from'");
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_filter_email: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
 
@@ -281,7 +281,7 @@ class PostieMessage {
             try {
                 $from = apply_filters("postie_filter_email2", $from, $toEmail, $replytoEmail);
                 DebugEcho("validate_poster: post postie_filter_email2 '$from'");
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_filter_email2: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         } else {
@@ -293,7 +293,7 @@ class PostieMessage {
             try {
                 $from = apply_filters("postie_filter_email3", $from, $this->email['headers']);
                 DebugEcho("validate_poster: post postie_filter_email3 '$from'");
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_filter_email3: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         }
@@ -329,7 +329,7 @@ class PostieMessage {
                     DebugEcho("validate_poster: pre postie_author $poster");
                     $poster = apply_filters("postie_author", $poster);
                     DebugEcho("validate_poster: post postie_author $poster");
-                } catch (Exception $exc) {
+                } catch (Throwable $exc) {
                     EchoError('postie_author: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                 }
             } else {
@@ -350,7 +350,7 @@ class PostieMessage {
                     DebugEcho("validate_poster: pre postie_author (default) $poster");
                     $poster = apply_filters("postie_author", $poster);
                     DebugEcho("validate_poster: post postie_author (default) $poster");
-                } catch (Exception $exc) {
+                } catch (Throwable $exc) {
                     EchoError('postie_author: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                 }
             }
@@ -367,7 +367,7 @@ class PostieMessage {
                     //wp_set_auth_cookie($poster);
                     try {
                         do_action('wp_login', $user->user_login, $user);
-                    } catch (Exception $exc) {
+                    } catch (Throwable $exc) {
                         EchoError('wp_login: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                     }
                 } else {
@@ -419,7 +419,7 @@ class PostieMessage {
 
         try {
             $recipients = apply_filters('postie_email_reject_recipients', $recipients, $this->email);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_reject_recipients: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         if (count($recipients) == 0) {
@@ -432,14 +432,14 @@ class PostieMessage {
         $subject = $blogname . ": Unauthorized Post Attempt from $from";
         try {
             $subject = apply_filters('postie_email_reject_subject', $subject, $this->email);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_reject_subject: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("email_reject: post postie_email_reject_subject: $subject");
 
         try {
             $message = apply_filters('postie_email_reject_body', $message, $this->email);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_reject_body: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("email_reject: post postie_email_reject_body: $message");
@@ -547,7 +547,7 @@ class PostieMessage {
         try {
             DebugEcho("pre postie_category_default: '$default_categoryid'");
             $default_categoryid = apply_filters('postie_category_default', $default_categoryid);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_category_default: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("post postie_category_default: '$default_categoryid'");
@@ -743,7 +743,7 @@ class PostieMessage {
             );
             try {
                 $comment = apply_filters('postie_comment_before', $comment);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_comment_before: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
             DebugEcho("postie_save_post: post postie_comment_before");
@@ -754,7 +754,7 @@ class PostieMessage {
             try {
                 DebugEcho("doing postie_comment_after");
                 do_action('postie_comment_after', $comment, $post_ID);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_comment_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         }
@@ -763,7 +763,7 @@ class PostieMessage {
             try {
                 DebugEcho("doing postie_post_after");
                 do_action('postie_post_after', $details);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_post_after: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         }
@@ -818,7 +818,7 @@ class PostieMessage {
 
         try {
             $recipients = apply_filters('postie_email_notify_recipients', $recipients, $this->email, $postid);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_notify_recipients: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         if (count($recipients) == 0) {
@@ -831,14 +831,14 @@ class PostieMessage {
         $subject = sprintf(__('Email imported to %s (%s)', 'postie'), html_entity_decode($blogname), $post_status);
         try {
             $subject = apply_filters('postie_email_notify_subject', $subject, $this->email, $postid);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_notify_subject: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("email_notify: post postie_email_notify_subject: $subject");
 
         try {
             $mailtext = apply_filters('postie_email_notify_body', $mailtext, $this->email, $postid);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_email_notify_body: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("email_notify: post postie_email_notify_body: $mailtext");
@@ -1344,7 +1344,7 @@ class PostieMessage {
         try {
             DebugEcho("get_subject: pre postie_subject: '$this->subject'");
             $this->subject = apply_filters('postie_subject', $this->subject);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_subject: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -1428,7 +1428,7 @@ class PostieMessage {
         try {
             DebugEcho("doing postie_file_added_pre");
             do_action('postie_file_added_pre', $post_id, $file_array);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_file_added_pre: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 
@@ -1467,7 +1467,7 @@ class PostieMessage {
             try {
                 DebugEcho("media_handle_upload: doing postie_file_added");
                 do_action('postie_file_added', $post_id, $id, $file_array);
-            } catch (Exception $exc) {
+            } catch (Throwable $exc) {
                 EchoError('postie_file_added: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
             }
         } else {
@@ -1525,7 +1525,7 @@ class PostieMessage {
 
         try {
             $id = apply_filters('postie_parent_post', $id, $this->email);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             EchoError('postie_parent_post: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
         DebugEcho("get_parent_postid: After postie_parent_post: $id");

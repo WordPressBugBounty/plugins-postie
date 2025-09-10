@@ -1050,7 +1050,7 @@ class fMailbox {
         try {
             DebugEcho('Starting postie_raw');
             do_action('postie_raw', $source);
-        } catch (Exception $exc) {
+        } catch (Throwable $exc) {
             error_log('postie_raw: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
         }
 

@@ -209,7 +209,7 @@ class PostieAutolink {
                         DebugEcho("autolink_do: oembed source, skipping $link_url");
                         try {
                             $link_url_enc = apply_filters('postie_bare_link', $link_url_enc, $link_url, true);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_bare_link: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                         DebugEcho("autolink_do: post postie_bare_link: $link_url_enc");
@@ -218,7 +218,7 @@ class PostieAutolink {
                         DebugEcho("autolink_do: linkifying $link_url");
                         try {
                             $link_html = apply_filters('postie_bare_link', "<a href=\"{$link_url}\"$currentTagfill>{$display_url_enc}</a>", $link_url, false);
-                        } catch (Exception $exc) {
+                        } catch (Throwable $exc) {
                             EchoError('postie_bare_link: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
                         DebugEcho("autolink_do: post postie_bare_link: $link_html");

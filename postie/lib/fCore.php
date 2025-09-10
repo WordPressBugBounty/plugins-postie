@@ -940,7 +940,7 @@ class fCore {
 
         try {
             self::call(self::$exception_handler_callback, self::$exception_handler_parameters);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             trigger_error(
                     self::compose('An exception was thrown in the %s closing code callback', 'setExceptionHandling()'), E_USER_ERROR
             );

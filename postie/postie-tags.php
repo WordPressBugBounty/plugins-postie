@@ -335,7 +335,7 @@ function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
                 $trial_category='';
                 try {
                     $trial_category = apply_filters('postie_category', trim($match), $category_match, $defaultcat_name);
-                } catch (Exception $exc) {
+                } catch (Throwable $exc) {
                     EchoError('postie_category: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                 }
                 DebugEcho("tag_Categories: post postie_category: $trial_category");

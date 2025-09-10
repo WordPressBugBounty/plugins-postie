@@ -29,7 +29,7 @@ function EchoError($v) {
     }
     try {
         do_action('postie_log_debug', $v);
-    } catch (Exception $exc) {
+    } catch (Throwable $exc) {
         echo('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
     }
 }
@@ -42,7 +42,7 @@ function DebugDump($v) {
     }
     try {
         do_action('postie_log_debug', $d);
-    } catch (Exception $exc) {
+    } catch (Throwable $exc) {
         EchoError('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
     }
 }
@@ -56,7 +56,7 @@ function DebugEcho($v, $force = false) {
     }
     try {
         do_action('postie_log_debug', $v);
-    } catch (Exception $exc) {
+    } catch (Throwable $exc) {
         EchoError('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
     }
 }
