@@ -151,9 +151,10 @@ function tag_Status(&$content, $config) {
 }
 
 function tag_Delay(&$content, $message_date, $config) {
-    $offset = (!$config['ignore_email_date'] && $config['use_time_offset']) ? $config['time_offset'] : 0;
+    $offset = (!$config['ignore_email_date'] && $config['use_time_offset']) ? floatval($config['time_offset']) : 0;
 
     DebugEcho("tag_Delay: start");
+    DebugEcho("tag_Delay: offset $offset");
     $delay = 0;
 
     if (true == $config['legacy_commands']) {
@@ -332,7 +333,7 @@ function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
             foreach ($matches[1] as $match) {
                 DebugEcho("tag_Categories: checking: $match");
 
-                $trial_category='';
+                $trial_category = '';
                 try {
                     $trial_category = apply_filters('postie_category', trim($match), $category_match, $defaultcat_name);
                 } catch (Throwable $exc) {

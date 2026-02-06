@@ -1,0 +1,13 @@
+{
+    "name": "postie/postie",
+    "description": "A WordPress plugin that allows users to create posts, pages, and other content types via email.",
+    "authors": [
+        {
+            "name": "Wayne Allen",
+            "email": "wayne@postieplugin.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "10.5.*"
+    }
+}
