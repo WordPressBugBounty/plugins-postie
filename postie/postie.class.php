@@ -205,29 +205,37 @@ class Postie {
                 DebugEcho("fetch_mail: $message_number: ------------------------------------");
                 DebugEcho("fetch_mail: fetch {$message['uid']}");
 
-                $email = new PostieMessage($mailbox->fetchMessage($message['uid']), $config);
+                $email = null;
+                try {
+                    $email = new PostieMessage($mailbox->fetchMessage($message['uid']), $config);
 
-                if ($email->is_email_empty()) {
-                    $message = __('Dang, message is empty!', 'postie');
-                    EchoError("fetch_mail: $message_number: ");
-                    DebugDump($message);
-                    continue;
-                } else if ($email->is_email_read()) {
-                    $message = __("Message is already marked 'read'.", 'postie');
-                    DebugEcho("fetch_mail: $message_number");
-                    DebugDump($message);
-                    continue;
-                }
+                    if ($email->is_email_empty()) {
+                        $message = __('Dang, message is empty!', 'postie');
+                        EchoError("fetch_mail: $message_number: ");
+                        DebugDump($message);
+                        continue;
+                    } else if ($email->is_email_read()) {
+                        $message = __("Message is already marked 'read'.", 'postie');
+                        DebugEcho("fetch_mail: $message_number");
+                        DebugDump($message);
+                        continue;
+                    }
 
-                $email->preprocess();
-                $email->process();
-                $email->postprocess();
+                    $email->preprocess();
+                    $email->process();
+                    $email->postprocess();
 
-                DebugEcho("fetch_mail: $message_number: processed");
+                    DebugEcho("fetch_mail: $message_number: processed");
 
-                if ($deleteMessages) {
-                    DebugEcho("fetch_mail: deleting {$message['uid']}");
-                    $mailbox->deleteMessages($message['uid']);
+                    if ($deleteMessages) {
+                        DebugEcho("fetch_mail: deleting {$message['uid']}");
+                        $mailbox->deleteMessages($message['uid']);
+                    }
+                } catch (Throwable $e) {
+                    EchoError("fetch_mail message error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                    if ($email !== null) {
+                        $email->cleanup_after_error();
+                    }
                 }
             }
 

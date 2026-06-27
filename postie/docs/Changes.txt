@@ -35,6 +35,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.76 (2026-06-26) =
+* Add robustness to image side loading
+
 = 1.9.75 (2026-01-28) =
 * Fix parsing of time offset
 

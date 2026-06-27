@@ -214,6 +214,14 @@ class PostieMessage {
         DebugEcho("postprocess: Done");
     }
 
+    function cleanup_after_error() {
+        if (!empty($this->post_id) && !is_wp_error($this->post_id)) {
+            DebugEcho("cleanup_after_error: deleting placeholder post $this->post_id due to processing failure");
+            wp_delete_post($this->post_id, true);
+        }
+        $this->revisions_restore();
+    }
+
     /**
      * This method works around a problem with email address with extra <> in the email address
      * @param string
@@ -1434,7 +1442,11 @@ class PostieMessage {
 
         DebugEcho("media_handle_sideload: adding " . $file_array['name']);
 
-        $id = media_handle_sideload($file_array, $post_id);
+        try {
+            $id = media_handle_sideload($file_array, $post_id);
+        } catch (Throwable $e) {
+            $id = new WP_Error('image_sideload_failed', $e->getMessage());
+        }
 
         if (!is_wp_error($id)) {
             DebugEcho("media_handle_upload: changing post_author to $poster");
