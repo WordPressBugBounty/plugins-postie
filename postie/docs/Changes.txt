@@ -35,6 +35,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.77 (2026-07-06) =
+* Add new setting to ignore messages from unknown email address rather than creating a draft.
+
 = 1.9.76 (2026-06-26) =
 * Add robustness to image side loading
 

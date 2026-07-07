@@ -49,7 +49,8 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
     global $wpdb, $wp_roles; //don't remove - used in included files
 
     $pconfig = new PostieConfig();
-    $config = $pconfig->config_read();
+    $config_dto = $pconfig->config_read();
+    $config = $config_dto ? $config_dto->toArray() : array();
     if (empty($config)) {
         $config = $pconfig->reset_to_default();
     }

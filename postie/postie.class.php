@@ -43,16 +43,16 @@ class Postie {
 
     function get_mail() {
         $config = postie_config_read();
-        if (true == $config['postie_log_error'] || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
+        if (true == $config->postie_log_error || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
             add_action('postie_log_error', array($this, 'log_error'));
         }
-        if (true == $config['postie_log_debug'] && !defined('POSTIE_DEBUG')) {
+        if (true == $config->postie_log_debug && !defined('POSTIE_DEBUG')) {
             define('POSTIE_DEBUG', true);
         }
-        if (true == $config['postie_log_debug'] || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
+        if (true == $config->postie_log_debug || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
             add_action('postie_log_debug', array($this, 'log_debug'));
         }
-        if (true == $config['duplicate_comments']) {
+        if (true == $config->duplicate_comments) {
             DebugEcho("enabling duplicate comments");
             add_filter('duplicate_comment_id', array($this, 'return_false'));
         }
@@ -110,7 +110,7 @@ class Postie {
 
     function intermediate_image_sizes_advanced($sizes) {
         $config = postie_config_read();
-        if ($config[PostieConfigOptions::ImageResize]) {
+        if ($config->image_resize) {
             DebugEcho('intermediate_image_sizes_advanced');
             DebugDump($sizes);
             return $sizes;
@@ -157,7 +157,7 @@ class Postie {
         } else {
             $type = 'pop3';
         }
-        $connectiontype = $config['input_connection'];
+        $connectiontype = $config->input_connection;
         if ($connectiontype == 'curl') {
             $conn = new pCurlConnection($type, trim($server), $email, $password, $port, ($protocol == 'imap-ssl' || $protocol == 'pop3-ssl'));
         } else {
@@ -474,15 +474,15 @@ class Postie {
 
     function connection_info($config) {
         $conninfo = array();
-        $conninfo['mail_server'] = $config['mail_server'];
-        $conninfo['mail_port'] = $config['mail_server_port'];
-        $conninfo['mail_user'] = $config['mail_userid'];
-        $conninfo['mail_password'] = $config['mail_password'];
-        $conninfo['mail_protocol'] = $config['input_protocol'];
-        $conninfo['mail_tls'] = $config['email_tls'];
-        $conninfo['email_delete_after_processing'] = $config['delete_mail_after_processing'];
-        $conninfo['email_max'] = $config['maxemails'];
-        $conninfo['email_ignore_state'] = $config['ignore_mail_state'];
+        $conninfo['mail_server'] = $config->mail_server;
+        $conninfo['mail_port'] = $config->mail_server_port;
+        $conninfo['mail_user'] = $config->mail_userid;
+        $conninfo['mail_password'] = $config->mail_password;
+        $conninfo['mail_protocol'] = $config->input_protocol;
+        $conninfo['mail_tls'] = $config->email_tls;
+        $conninfo['email_delete_after_processing'] = $config->delete_mail_after_processing;
+        $conninfo['email_max'] = $config->maxemails;
+        $conninfo['email_ignore_state'] = $config->ignore_mail_state;
 
         return apply_filters('postie_preconnect', $conninfo);
     }
@@ -498,13 +498,13 @@ class Postie {
         }
 
         $config = postie_config_read();
-        if (true == $config['postie_log_error'] || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
+        if (true == $config->postie_log_error || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
             add_action('postie_log_error', array($this, 'log_error'));
         }
-        if (true == $config['postie_log_debug'] && !defined('POSTIE_DEBUG')) {
+        if (true == $config->postie_log_debug && !defined('POSTIE_DEBUG')) {
             define('POSTIE_DEBUG', true);
         }
-        if (true == $config['postie_log_debug'] || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
+        if (true == $config->postie_log_debug || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
             add_action('postie_log_debug', array($this, 'log_debug'));
         }
         ?>
@@ -522,8 +522,8 @@ class Postie {
             DebugEcho("Wordpress timezone: $wptzs ($wptz)", true);
             DebugEcho("Current time: " . current_time('mysql'), true);
             DebugEcho("Current time (gmt): " . current_time('mysql', 1), true);
-            DebugEcho("Postie time correction: {$config['time_offset']}", true);
-            $offsetdate = strtotime(current_time('mysql')) + ($config['use_time_offset'] ? $config['time_offset'] * 3600 : 0);
+            DebugEcho("Postie time correction: {$config->time_offset}", true);
+            $offsetdate = strtotime(current_time('mysql')) + ($config->use_time_offset ? $config->time_offset * 3600 : 0);
 
             DebugEcho("Post time: " . date('Y-m-d H:i:s', $offsetdate), true);
             ?>
@@ -534,12 +534,12 @@ class Postie {
 
             <h2>Connect to Mail Host</h2>
             <?php
-            DebugEcho("Postie connection: " . $config['input_connection'], true);
-            DebugEcho("Postie protocol: " . $config['input_protocol'], true);
-            DebugEcho("Postie server: " . $config['mail_server'], true);
-            DebugEcho("Postie port: " . $config['mail_server_port'], true);
+            DebugEcho("Postie connection: " . $config->input_connection, true);
+            DebugEcho("Postie protocol: " . $config->input_protocol, true);
+            DebugEcho("Postie server: " . $config->mail_server, true);
+            DebugEcho("Postie port: " . $config->mail_server_port, true);
 
-            if (!$config['mail_server'] || !$config['mail_server_port'] || !$config['mail_userid']) {
+            if (!$config->mail_server || !$config->mail_server_port || !$config->mail_userid) {
                 EchoError("FAIL - server settings not complete");
             }
 
@@ -549,11 +549,11 @@ class Postie {
                 fCore::registerDebugCallback('DebugEcho');
             }
 
-            switch (strtolower($config['input_protocol'])) {
+            switch (strtolower($config->input_protocol)) {
                 case 'imap':
                 case 'imap-ssl':
                     try {
-                        if ($config['input_connection'] == 'curl') {
+                        if ($config->input_connection == 'curl') {
                             $conn = new pCurlConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
                         } else {
                             $conn = new pSocketConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
@@ -561,7 +561,7 @@ class Postie {
                         $srv = new pImapMailServer($conn);
                         $mailbox = new fMailbox('imap', $conn, $srv);
                         $m = $mailbox->countMessages();
-                        DebugEcho("Successful " . strtoupper($config['input_protocol']) . " connection on port {$config['mail_server_port']}", true);
+                        DebugEcho("Successful " . strtoupper($config->input_protocol) . " connection on port {$config->mail_server_port}", true);
                         DebugEcho("# of waiting messages: $m", true);
                         $mailbox->close();
                     } catch (Throwable $e) {
@@ -572,7 +572,7 @@ class Postie {
                 case 'pop3':
                 case 'pop3-ssl':
                     try {
-                        if ($config['input_connection'] == 'curl') {
+                        if ($config->input_connection == 'curl') {
                             $conn = new pCurlConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'), 30);
                         } else {
                             $conn = new pSocketConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
@@ -580,7 +580,7 @@ class Postie {
                         $srv = new pPop3MailServer($conn);
                         $mailbox = new fMailbox('pop3', $conn, $srv);
                         $m = $mailbox->countMessages();
-                        DebugEcho("Successful " . strtoupper($config['input_protocol']) . " connection on port {$config['mail_server_port']}", true);
+                        DebugEcho("Successful " . strtoupper($config->input_protocol) . " connection on port {$config->mail_server_port}", true);
                         DebugEcho("# of waiting messages: $m", true);
                         $mailbox->close();
                     } catch (Throwable $e) {

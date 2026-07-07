@@ -117,6 +117,7 @@
         <?php echo PostieAdmin::boolean_select_html(__("Allow Duplicate Comments", 'postie'), "postie-settings[duplicate_comments]", $duplicate_comments, 'WordPress will stop Postie from running if it decides a comment is a duplicate.'); ?>
 
         <?php echo PostieAdmin::boolean_select_html(__("Forward Rejected Mail", 'postie'), "postie-settings[forward_rejected_mail]", $forward_rejected_mail); ?>
+        <?php echo PostieAdmin::boolean_select_html(__("Keep unknown emails as draft", 'postie'), "postie-settings[keep_unknown_emails_as_draft]", $keep_unknown_emails_as_draft, __("If an email is received from an unknown/unauthorized sender, keep it as a draft instead of rejecting it.", 'postie')); ?>
         <?php echo PostieAdmin::boolean_select_html(__("Allow Subject In Mail", 'postie'), "postie-settings[allow_subject_in_mail]", $allow_subject_in_mail, "Enclose the subject between '#' on the very first line. E.g. #this is my subject#"); ?>
         <?php echo PostieAdmin::boolean_select_html(__("Allow HTML In Mail Subject", 'postie'), "postie-settings[allow_html_in_subject]", $allow_html_in_subject); ?>
         <tr> 

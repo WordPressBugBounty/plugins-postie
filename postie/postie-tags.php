@@ -6,7 +6,10 @@ function postie_is_html($str, $config = null) {
         DebugEcho('postie_is_html: content: ' . $h ? 'true' : 'false');
         return $h;
     } else {
-        $h = $config['prefer_text_type'] === 'html';
+        if (is_array($config)) {
+            $config = new PostieSettings($config);
+        }
+        $h = $config->prefer_text_type === 'html';
         DebugEcho('postie_is_html: config: ' . $h ? 'true' : 'false');
         return $h;
     }
@@ -95,9 +98,12 @@ function postie_lookup_category_id($trial_category, $category_match = true) {
  * @return boolean
  */
 function tag_AllowCommentsOnPost(&$content, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     $comments_allowed = get_option('default_comment_status'); // 'open' or 'closed'
 
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         foreach (postie_content_lines($content) as $line) {
             $matches = array();
             if (preg_match("/^\s*comments:\s*([0|1|2])/imu", $line, $matches)) {
@@ -120,10 +126,13 @@ function tag_AllowCommentsOnPost(&$content, $config) {
 }
 
 function tag_Status(&$content, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
 
-    $poststatus = $config['post_status'];
+    $poststatus = $config->post_status;
 
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         foreach (postie_content_lines($content) as $lines) {
             $matches = array();
             if (preg_match("/^\s*status:\s*(draft|publish|pending|private|future)/imu", $lines, $matches)) {
@@ -138,7 +147,7 @@ function tag_Status(&$content, $config) {
         DebugEcho("tag_Status: disabled - ignore legacy commands");
     }
 
-    if ($config['force_user_login']) {
+    if ($config->force_user_login) {
         if (stristr('publish|future', $poststatus)) {
             if (!current_user_can('publish_posts')) {
                 DebugEcho("tag_Status: user doesn't have publish_posts capability");
@@ -151,13 +160,16 @@ function tag_Status(&$content, $config) {
 }
 
 function tag_Delay(&$content, $message_date, $config) {
-    $offset = (!$config['ignore_email_date'] && $config['use_time_offset']) ? floatval($config['time_offset']) : 0;
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    $offset = (!$config->ignore_email_date && $config->use_time_offset) ? floatval($config->time_offset) : 0;
 
     DebugEcho("tag_Delay: start");
     DebugEcho("tag_Delay: offset $offset");
     $delay = 0;
 
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         foreach (postie_content_lines($content) as $line) {
             $matches = array();
             if (preg_match("/^\s*delay:\s*(-?[0-9dhm]+)/imu", $line, $matches) && trim($matches[1])) {
@@ -210,7 +222,7 @@ function tag_Delay(&$content, $message_date, $config) {
     }
     DebugEcho("tag_Delay: timezone: $tzs");
 
-    if ($config['ignore_email_date']) {
+    if ($config->ignore_email_date) {
         $dateInSeconds = new DateTime(current_time('mysql'), new DateTimeZone($tzs));
         DebugEcho("tag_Delay: ignoring date: " . $dateInSeconds->format(DATE_RFC2822));
     } else {
@@ -265,14 +277,17 @@ function tag_Delay(&$content, $message_date, $config) {
 }
 
 function tag_Excerpt(&$content, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     $post_excerpt = '';
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         $matches = array();
         if (preg_match('/\s*:excerptstart ?(.*):excerptend/imus', $content, $matches)) {
             $content = str_replace($matches[0], "", $content);
             $post_excerpt = $matches[1];
             DebugEcho("tag_Excerpt: excerpt found: $post_excerpt");
-            if ($config['filternewlines']) {
+            if ($config->filternewlines) {
                 DebugEcho("tag_Excerpt: filtering newlines from excerpt");
                 $post_excerpt = filter_Newlines($post_excerpt, $config);
             }
@@ -289,27 +304,30 @@ function tag_Excerpt(&$content, $config) {
  * @return array
  */
 function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     DebugEcho("tag_Categories: start");
-    $category_match = $config[PostieConfigOptions::CategoryMatch];
+    $category_match = $config->category_match;
     $original_subject = $subject;
     $found = false;
     $post_categories = array();
     $matchtypes = array();
     $matches = array();
 
-    if ($config[PostieConfigOptions::CategoryBracket]) {
+    if ($config->category_bracket) {
         if (preg_match_all('/\[(.[^\[]*)\]/', $subject, $matches)) { // [<category1>] [<category2>] <Subject>
             $matchtypes[] = $matches;
         }
     }
 
-    if ($config[PostieConfigOptions::CategoryDash]) {
+    if ($config->category_dash) {
         if (preg_match_all('/-(.[^-]*)-/', $subject, $matches)) { // -<category>- -<category2>- <Subject>
             $matchtypes[] = $matches;
         }
     }
 
-    if ($config[PostieConfigOptions::CategoryColon]) {
+    if ($config->category_colon) {
         if (preg_match('/(.+?):\s?(.*)/', $subject, $matches)) { // <category>: <Subject>
             $matchtypes[] = array(array(0 => $matches[1] . ':'), array(1 => $matches[1]));
         }
@@ -359,12 +377,12 @@ function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
             }
         }
     }
-    if (!$found || !$config[PostieConfigOptions::CategoryRemove]) {
-        if ($config[PostieConfigOptions::PostType] == 'page') {
+    if (!$found || !$config->category_remove) {
+        if ($config->post_type == 'page') {
             DebugEcho("tag_Categories: no default, page post type, not adding default category");
         } else {
             if (!$found) {
-                DebugEcho("tag_Categories: using default: $defaultCategoryId for post type {$config[PostieConfigOptions::PostType]}");
+                DebugEcho("tag_Categories: using default: $defaultCategoryId for post type {$config->post_type}");
                 $post_categories[] = $defaultCategoryId;
             }
         }
@@ -375,7 +393,10 @@ function tag_Categories(&$subject, $defaultCategoryId, $config, $post_id) {
 }
 
 function tag_CustomImageField($post_ID, $email, $config) {
-    if ($config['custom_image_field']) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    if ($config->custom_image_field) {
         DebugEcho("Saving custom image post_meta");
 
         foreach (array_merge($email['attachment'], $email['inline'], $email['related']) as $attachment) {
@@ -394,9 +415,12 @@ function tag_CustomImageField($post_ID, $email, $config) {
  */
 
 function tag_PostType(&$subject, &$config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
 
-    $post_type = $config[PostieConfigOptions::PostType];
-    $post_format = $config[PostieConfigOptions::PostFormat];
+    $post_type = $config->post_type;
+    $post_format = $config->post_format;
     $separated_subject = array();
     $separated_subject[0] = "";
     $separated_subject[1] = $subject;
@@ -414,22 +438,25 @@ function tag_PostType(&$subject, &$config) {
         DebugEcho("post type: found type '$trial'");
         $post_type = $trial;
         $subject = trim($separated_subject[1]);
-        $config[PostieConfigOptions::PostType] = $trial;
+        $config->post_type = $trial;
     } elseif (in_array($trial, array_keys(get_post_format_strings()))) {
         DebugEcho("post type: found format '$trial'");
         $post_format = $trial;
         $subject = trim($separated_subject[1]);
-        $config[PostieConfigOptions::PostFormat] = $trial;
+        $config->post_format = $trial;
     }
 
     return array('post_type' => $post_type, 'post_format' => $post_format);
 }
 
 function tag_Date(&$content, $message_date, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
 
     DebugEcho("tag_Date: start");
 
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         foreach (postie_content_lines($content) as $e) {
             $matches = array();
             if (1 === preg_match("/^\s*date:(.*)$/imu", $e, $matches)) {
@@ -464,10 +491,13 @@ function tag_Date(&$content, $message_date, $config) {
 }
 
 function tag_Tags(&$content, $config) {
-    $defaultTags = $config['default_post_tags'];
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    $defaultTags = $config->default_post_tags;
     DebugEcho("tag_Tags: starting");
     $post_tags = array();
-    if (true == $config['legacy_commands']) {
+    if (true == $config->legacy_commands) {
         foreach (postie_content_lines($content, $config) as $line) {
             //DebugEcho("tag_Tags: line: $line");
             $matches = array();

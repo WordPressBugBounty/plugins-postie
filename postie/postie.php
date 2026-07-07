@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.76
+  Version: 1.9.77
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3587818 2026-06-27 04:36:43Z WayneAllen $
+  $Id: postie.php 3598399 2026-07-06 23:24:39Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
@@ -152,7 +152,7 @@ if (!class_exists('PostieInit')) {
         //https://make.wordpress.org/core/2019/04/25/site-health-check-in-5-2/
         function test_delete_mail_after_processing() {
             $config = postie_config_read();
-            $enabled = $config['delete_mail_after_processing'];
+            $enabled = $config->delete_mail_after_processing;
             $result = array(
                 'label' => __('Postie should delete emails after processing'),
                 'status' => $enabled ? 'good' : 'recommended',
@@ -171,7 +171,7 @@ if (!class_exists('PostieInit')) {
 
         function test_turn_authorization_off() {
             $config = postie_config_read();
-            $enabled = !$config['turn_authorization_off'];
+            $enabled = !$config->turn_authorization_off;
             $result = array(
                 'label' => __('Postie should only allow authorized users to post'),
                 'status' => $enabled ? 'good' : 'critical',
@@ -240,7 +240,12 @@ if (!class_exists('PostieInit')) {
 
         function admin_init_action() {
             wp_register_style('postie-style', plugins_url('css/style.css', __FILE__));
-            register_setting('postie-settings', 'postie-settings', array(new PostieConfig(), 'config_ValidateSettings'));
+            register_setting('postie-settings', 'postie-settings', array($this, 'lazy_validate_settings'));
+        }
+
+        function lazy_validate_settings($in) {
+            $pconfig = new PostieConfig();
+            return $pconfig->config_ValidateSettings($in);
         }
 
         function admin_menu_action() {
@@ -369,16 +374,16 @@ if (!class_exists('PostieInit')) {
         function postie_warnings() {
             $config = postie_config_read();
 
-            if ((empty($config['mail_server']) ||
-                    empty($config['mail_server_port']) ||
-                    empty($config['mail_userid']) ||
-                    empty($config['mail_password'])
+            if ((empty($config->mail_server) ||
+                    empty($config->mail_server_port) ||
+                    empty($config->mail_userid) ||
+                    empty($config->mail_password)
                     ) && !isset($_POST['submit'])) {
 
                 add_action('admin_notices', array($this, 'postie_enter_info'));
             }
 
-            if ($this->postie_isMarkdownInstalled() && $config['prefer_text_type'] == 'html') {
+            if ($this->postie_isMarkdownInstalled() && $config->prefer_text_type == 'html') {
                 add_action('admin_notices', array($this, 'postie_markdown_warning'));
             }
 
@@ -395,11 +400,11 @@ if (!class_exists('PostieInit')) {
             } else {
                 $cv['version'] = '1.0.0';
             }
-            if ($config['input_connection'] == 'curl' && !version_compare($cv['version'], '7.30.0', 'ge')) {
+            if ($config->input_connection == 'curl' && !version_compare($cv['version'], '7.30.0', 'ge')) {
                 add_action('admin_notices', array($this, 'postie_curl_warning'));
             }
 
-            $userdata = WP_User::get_data_by('login', $config['admin_username']);
+            $userdata = WP_User::get_data_by('login', $config->admin_username);
             if (!$userdata) {
                 add_action('admin_notices', array($this, 'postie_adminuser_warning'));
             }

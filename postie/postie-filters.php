@@ -3,16 +3,19 @@
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib/autolink.php");
 
 function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     global $g_postie;
 
     $matches = array();
     $isgallery = preg_match("/\[gallery[^\[]*\]/u", $content, $matches);
 
-    DebugEcho("filter_AttachmentTemplates: custom_image_field: " . $config['custom_image_field']);
-    DebugEcho("filter_AttachmentTemplates: auto_gallery: " . $config['auto_gallery']);
+    DebugEcho("filter_AttachmentTemplates: custom_image_field: " . $config->custom_image_field);
+    DebugEcho("filter_AttachmentTemplates: auto_gallery: " . $config->auto_gallery);
     DebugEcho("filter_AttachmentTemplates: [gallery]: " . ($isgallery ? 'yes' : 'no'));
 
-    $addimages = !($config['custom_image_field'] || $config['auto_gallery'] || $isgallery);
+    $addimages = !($config->custom_image_field || $config->auto_gallery || $isgallery);
 
     DebugEcho("filter_AttachmentTemplates: addimages: " . ($addimages ? 'yes' : 'no'));
 
@@ -20,7 +23,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
 
     DebugEcho("filter_AttachmentTemplates: looking for attachments to add to post");
     $html = '';
-    if (!$config['include_featured_image']) {
+    if (!$config->include_featured_image) {
         //find the image to exclude
         $featuredimageid = get_post_thumbnail_id($post_id);
     }
@@ -30,15 +33,15 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     foreach ($mimeDecodedEmail['attachment'] as $attachment) {
         if (isset($attachment['wp_filename'])) {
             DebugEcho("filter_AttachmentTemplates: image: " . $attachment['wp_filename']);
-            DebugEcho("filter_AttachmentTemplates: skip: $featuredimageid, " . $attachment['wp_id'] . ', ' . $config['include_featured_image'] . ', ' . $attachment['exclude']);
-            $skip = ($featuredimageid == $attachment['wp_id'] && !$config['include_featured_image']) || $attachment['exclude'];
+            DebugEcho("filter_AttachmentTemplates: skip: $featuredimageid, " . $attachment['wp_id'] . ', ' . $config->include_featured_image . ', ' . $attachment['exclude']);
+            $skip = ($featuredimageid == $attachment['wp_id'] && !$config->include_featured_image) || $attachment['exclude'];
             if (!$skip) {
                 if (!$addimages && $attachment['primary'] == 'image') {
                     DebugEcho("filter_AttachmentTemplates: skip image " . $attachment['wp_filename']);
                 } else {
                     $template = $attachment['template'];
                     DebugEcho("filter_AttachmentTemplates: pre filter '$template'");
-                    if ($config['images_append']) {
+                    if ($config->images_append) {
                         try {
                             DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
                             $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
@@ -71,13 +74,13 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     foreach (array_merge($mimeDecodedEmail['inline'], $mimeDecodedEmail['related']) as $attachment) {
         if (isset($attachment['wp_filename'])) {
             DebugEcho("filter_AttachmentTemplates: image: " . $attachment['wp_filename']);
-            $skip = ($featuredimageid == $attachment['wp_id'] && !$config['include_featured_image']) || $attachment['exclude'];
+            $skip = ($featuredimageid == $attachment['wp_id'] && !$config->include_featured_image) || $attachment['exclude'];
             if (!$skip) {
                 if (!$addimages && $attachment['primary'] == 'image') {
                     DebugEcho("filter_AttachmentTemplates: skip image (alt) " . $attachment['wp_filename']);
                 } else {
                     $template = $attachment['template'];
-                    if ($config['images_append']) {
+                    if ($config->images_append) {
                         try {
                             DebugEcho("filter_AttachmentTemplates: pre postie_place_media_after");
                             $template = apply_filters('postie_place_media_after', $template, $attachment['wp_id']);
@@ -107,7 +110,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     $html = trim($html);
     if (!empty($html)) {
         DebugEcho("filter_AttachmentTemplates: attachments generated: $html");
-        if ($config['images_append']) {
+        if ($config->images_append) {
             $content = $content . '<div class="postie-attachments">' . $html . '</div>';
         } else {
             $content = '<div class="postie-attachments">' . $html . '</div>' . $content;
@@ -117,7 +120,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     }
 
     //strip featured image from html
-    if ($featuredimageid > 0 && $config['prefer_text_type'] == 'html' && !$config['include_featured_image']) {
+    if ($featuredimageid > 0 && $config->prefer_text_type == 'html' && !$config->include_featured_image) {
         DebugEcho("filter_AttachmentTemplates: remove featured image from post");
         $html = str_get_html($content);
         if ($html) {
@@ -138,8 +141,8 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     }
     DebugEcho("filter_AttachmentTemplates: image count $imagecount");
 
-    if (($imagecount > 0) && $config['auto_gallery']) {
-        $linktype = strtolower($config['auto_gallery_link']);
+    if (($imagecount > 0) && $config->auto_gallery) {
+        $linktype = strtolower($config->auto_gallery_link);
         DebugEcho("filter_AttachmentTemplates: Auto gallery: link type $linktype");
         $g_postie->show_filters_for('postie_gallery');
         if ($linktype == 'default') {
@@ -158,7 +161,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
             }
         }
         DebugEcho("filter_AttachmentTemplates: Auto gallery: template '$imageTemplate'");
-        if ($config['images_append']) {
+        if ($config->images_append) {
             $content .= "\n$imageTemplate";
             DebugEcho("filter_AttachmentTemplates: Auto gallery: append");
         } else {
@@ -208,7 +211,10 @@ function filter_CleanHtml($content) {
  * @param string
  */
 function filter_Start($content, $config) {
-    $start = $config['message_start'];
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    $start = $config->message_start;
     if (!empty($start)) {
         $pos = stripos($content, $start);
         if ($pos === false) {
@@ -229,27 +235,30 @@ function filter_Start($content, $config) {
  * @param array - a list of patterns to determine if it is a sig block
  */
 function filter_RemoveSignature($content, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     global $g_postie;
 
     DebugEcho("filter_RemoveSignature: start");
-    if ($config['drop_signature']) {
-        if (empty($config['sig_pattern_list'])) {
+    if ($config->drop_signature) {
+        if (empty($config->sig_pattern_list)) {
             DebugEcho("filter_RemoveSignature: no sig_pattern_list");
             return $content;
         }
         DebugEcho("looking for signature in: $content");
 
         $html = $g_postie->load_html($content);
-        if ($html !== false && $config['prefer_text_type'] == 'html') {
+        if ($html !== false && $config->prefer_text_type == 'html') {
             DebugEcho("filter_RemoveSignature: html");
-            $pattern = '/>\s*(' . implode('|', $config['sig_pattern_list']) . ')/miu';
+            $pattern = '/>\s*(' . implode('|', $config->sig_pattern_list) . ')/miu';
             DebugEcho("filter_RemoveSignature: pattern: $pattern");
             filter_RemoveSignatureWorker($html->root, $pattern);
             //DebugEcho("filter_RemoveSignature: post worker: $html");
             $content = $html->save();
         } else {
             DebugEcho("filter_RemoveSignature: plain");
-            $pattern = '/^(' . implode('|', $config['sig_pattern_list']) . ')\s?$/miu';
+            $pattern = '/^(' . implode('|', $config->sig_pattern_list) . ')\s?$/miu';
             DebugEcho("filter_RemoveSignature: pattern: $pattern");
             $arrcontent = explode("\n", $content);
             $strcontent = '';
@@ -321,7 +330,10 @@ function filter_RemoveSignatureWorker(&$html, $pattern) {
  * @param filter
  */
 function filter_End($content, $config) {
-    $end = $config['message_end'];
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    $end = $config->message_end;
     if (!empty($end)) {
         $pos = stripos($content, $end);
         if ($pos === false) {
@@ -337,7 +349,10 @@ function filter_End($content, $config) {
 
 //filter content for new lines
 function filter_Newlines($content, $config) {
-    if ($config['filternewlines']) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
+    if ($config->filternewlines) {
         DebugEcho("filter_Newlines: filternewlines");
         $search = array(
             "/\r\n\r\n/",
@@ -357,7 +372,7 @@ function filter_Newlines($content, $config) {
         $result = preg_replace($search, $replace, $content);
         DebugDump($result);
 
-        if ($config['convertnewline']) {
+        if ($config->convertnewline) {
             DebugEcho("filter_Newlines: converting newlines to <br>");
             $content = preg_replace('/(LINEBREAK)/', "<br />\n", $result);
             $content = preg_replace('/(PARABREAK)/', "<br />\n<br />\n", $content);
@@ -450,12 +465,15 @@ function filter_ReplaceImageCIDs($content, &$email) {
 }
 
 function filter_ReplaceInlineImage($content, &$email, $config) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     DebugEcho('filter_ReplaceInlineImage: start');
     $i = 1;
     foreach ($email['inline'] as &$inlineImage) {
-        if (($inlineImage['primary'] == 'image' && $config['auto_gallery']) ||
-                $config['custom_image_field'] ||
-                $config['featured_image'] && !$config['include_featured_image'] && $i == 1) {
+        if (($inlineImage['primary'] == 'image' && $config->auto_gallery) ||
+                $config->custom_image_field ||
+                $config->featured_image && !$config->include_featured_image && $i == 1) {
             //remove inline placeholder if we're not showing the image here
             DebugEcho('filter_ReplaceInlineImage: do not add inline due to config');
             $template = '';
@@ -479,9 +497,12 @@ function filter_ReplaceInlineImage($content, &$email, $config) {
  * This function handles replacing image place holder #img1# with the HTML for that image
  */
 function filter_ReplaceImagePlaceHolders($content, &$email, $config, $post_id, $image_pattern) {
+    if (is_array($config)) {
+        $config = new PostieSettings($config);
+    }
     DebugEcho("filter_ReplaceImagePlaceHolders: start");
-    if (!$config['custom_image_field']) {
-        $startIndex = $config['start_image_count_at_zero'] ? 0 : 1;
+    if (!$config->custom_image_field) {
+        $startIndex = $config->start_image_count_at_zero ? 0 : 1;
 
         $images = get_posts(array(
             'post_parent' => $post_id,

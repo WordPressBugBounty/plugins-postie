@@ -12,6 +12,12 @@ class PostieMessage {
 
     public function __construct($email, $config) {
 
+        if (is_array($config)) {
+
+            $config = new PostieSettings($config);
+
+        }
+
         $this->config = $config;
 
         if (is_array($email)) {
@@ -28,14 +34,14 @@ class PostieMessage {
                 DebugEcho("getemails: no html");
             }
 
-            if ($config['prefer_text_convert']) {
-                if ($config['prefer_text_type'] == 'plain' && trim($email['text']) == '' && trim($email['html']) != '') {
+            if ($config->prefer_text_convert) {
+                if ($config->prefer_text_type == 'plain' && trim($email['text']) == '' && trim($email['html']) != '') {
                     DebugEcho('get_mail: switching to html');
-                    $this->config['prefer_text_type'] = 'html';
+                    $this->config->prefer_text_type = 'html';
                 }
-                if ($config['prefer_text_type'] == 'html' && trim($email['html']) == '' && trim($email['text']) != '') {
+                if ($config->prefer_text_type == 'html' && trim($email['html']) == '' && trim($email['text']) != '') {
                     DebugEcho('get_mail: switching to plain');
-                    $this->config['prefer_text_type'] = 'plain';
+                    $this->config->prefer_text_type = 'plain';
                 }
             }
         }
@@ -119,14 +125,21 @@ class PostieMessage {
         //Check poster to see if a valid person
         $this->poster = $this->get_author();
         if (empty($this->poster)) {
-            if ($this->config['forward_rejected_mail']) {
+            if ($this->config->forward_rejected_mail) {
                 $this->email_reject();
                 DebugEcho("A copy of the message has been forwarded to the administrator.");
             }
+            if (!$this->config->keep_unknown_emails_as_draft) {
+                DebugEcho('process: not authorized and keep_unknown_emails_as_draft is false. Discarding post.');
+                if (!empty($this->post_id) && !is_wp_error($this->post_id)) {
+                    wp_delete_post($this->post_id, true);
+                }
+                return;
+            }
             DebugEcho('process: not authorized, setting to draft.');
-            $this->config['post_status'] = 'draft';
-            DebugEcho("process: not authorized, looking up default user " . $this->config['admin_username']);
-            $user = get_user_by('login', $this->config['admin_username']);
+            $this->config->post_status = 'draft';
+            DebugEcho("process: not authorized, looking up default user " . $this->config->admin_username);
+            $user = get_user_by('login', $this->config->admin_username);
             $this->poster = $user->ID;
         }
 
@@ -180,7 +193,7 @@ class PostieMessage {
         $postid = $this->save_post($details, $this->is_reply);
 
         $recipients = array();
-        $dest = $this->config['confirmation_email'];
+        $dest = $this->config->confirmation_email;
         if ($dest == 'sender' || $dest == 'both') {
             $recipients[] = $details['email_author'];
         }
@@ -346,11 +359,11 @@ class PostieMessage {
             }
         }
 
-        if (empty($user_ID) && ($this->config['turn_authorization_off'] || $this->is_emailaddress_authorized($from, $this->config['authorized_addresses']) || $this->is_emailaddress_authorized($resentFrom, $this->config['authorized_addresses']))) {
-            DebugEcho("validate_poster: looking up default user " . $this->config['admin_username']);
-            $user = get_user_by('login', $this->config['admin_username']);
+        if (empty($user_ID) && ($this->config->turn_authorization_off || $this->is_emailaddress_authorized($from, $this->config->authorized_addresses) || $this->is_emailaddress_authorized($resentFrom, $this->config->authorized_addresses))) {
+            DebugEcho("validate_poster: looking up default user " . $this->config->admin_username);
+            $user = get_user_by('login', $this->config->admin_username);
             if ($user === false) {
-                EchoError("Your 'Default Poster' setting '" . $this->config['admin_username'] . "' is not a valid WordPress user (2)");
+                EchoError("Your 'Default Poster' setting '" . $this->config->admin_username . "' is not a valid WordPress user (2)");
                 $poster = 1;
             } else {
                 $poster = $user->ID;
@@ -367,7 +380,7 @@ class PostieMessage {
 
         if ($poster) {
             //actually log in as the user
-            if ($this->config['force_user_login'] == true) {
+            if ($this->config->force_user_login == true) {
                 $user = get_user_by('id', $poster);
                 if ($user) {
                     DebugEcho("validate_poster: logging in as {$user->user_login}");
@@ -395,7 +408,7 @@ class PostieMessage {
         DebugEcho('email_reject: start');
 
         $recipients = array(get_option('admin_email'));
-        $returnToSender = $this->config['return_to_sender'];
+        $returnToSender = $this->config->return_to_sender;
 
         $blogname = get_option('blogname');
         $from = $this->email['headers']['from']['mailbox'] . '@' . $this->email['headers']['from']['host'];
@@ -483,7 +496,7 @@ class PostieMessage {
     }
 
     function create_post() {
-        DebugEcho("create_post: prefer_text_type: " . $this->config['prefer_text_type']);
+        DebugEcho("create_post: prefer_text_type: " . $this->config->prefer_text_type);
 
         $fulldebug = $this->is_debugmode();
         $fulldebugdump = false;
@@ -522,7 +535,7 @@ class PostieMessage {
         $delay = 0;
         if (array_key_exists('date', $this->email['headers']) && !empty($this->email['headers']['date'])) {
             DebugEcho("date header: {$this->email['headers']['date']}");
-            if ($this->config['ignore_email_date']) {
+            if ($this->config->ignore_email_date) {
                 $message_date = current_time('mysql');
                 DebugEcho("system date: $message_date");
             } else {
@@ -550,7 +563,7 @@ class PostieMessage {
             DebugEcho("post tag_PostType: $this->content");
         }
 
-        $default_categoryid = $this->config['default_post_category'];
+        $default_categoryid = $this->config->default_post_category;
 
         try {
             DebugEcho("pre postie_category_default: '$default_categoryid'");
@@ -586,14 +599,14 @@ class PostieMessage {
             DebugEcho("post filter_ReplaceImageCIDs: $this->content");
         }
 
-        if ($this->config['converturls']) {
+        if ($this->config->converturls) {
             $this->content = filter_Linkify($this->content);
             if ($fulldebug) {
                 DebugEcho("post filter_Linkify: $this->content");
             }
         }
 
-        if ($this->config['reply_as_comment'] == true) {
+        if ($this->config->reply_as_comment == true) {
             $id = $this->get_parent_postid($this->subject);
             if (empty($id)) {
                 DebugEcho("Not a reply");
@@ -602,7 +615,7 @@ class PostieMessage {
             } else {
                 DebugEcho("Reply detected");
                 $this->is_reply = true;
-                if (true == $this->config['strip_reply']) {
+                if (true == $this->config->strip_reply) {
                     // strip out quoted content
                     $lines = explode("\n", $this->content);
                     $newContents = '';
@@ -615,7 +628,7 @@ class PostieMessage {
                             $newContents .= "$line\n";
                         }
                     }
-                    if ((strlen($newContents) <> strlen($this->content)) && ('html' == $this->config['prefer_text_type'])) {
+                    if ((strlen($newContents) <> strlen($this->content)) && ('html' == $this->config->prefer_text_type)) {
                         DebugEcho("Attempting to fix reply html (before): $newContents");
                         $newContents = $this->load_html($newContents)->__toString();
                         DebugEcho("Attempting to fix reply html (after): $newContents");
@@ -644,7 +657,7 @@ class PostieMessage {
             DebugEcho("post filter_End: $this->content");
         }
 
-        $this->content = filter_ReplaceImagePlaceHolders($this->content, $this->email, $this->config, $id, $this->config['image_placeholder']);
+        $this->content = filter_ReplaceImagePlaceHolders($this->content, $this->email, $this->config, $id, $this->config->image_placeholder);
         if ($fulldebug) {
             DebugEcho("post filter_ReplaceImagePlaceHolders: $this->content");
         }
@@ -658,7 +671,7 @@ class PostieMessage {
         }
 
         //handle inline images after linkify
-        if ('plain' == $this->config['prefer_text_type']) {
+        if ('plain' == $this->config->prefer_text_type) {
             $this->content = filter_ReplaceInlineImage($this->content, $this->email, $this->config);
             if ($fulldebug) {
                 DebugEcho("post filter_ReplaceInlineImage: $this->content");
@@ -667,7 +680,7 @@ class PostieMessage {
 
         $this->content = filter_AttachmentTemplates($this->content, $this->email, $this->post_id, $this->config);
 
-        if ($this->config[PostieConfigOptions::AddWrapperDiv]) {
+        if ($this->config->add_wrapper_div) {
             DebugEcho('Adding div');
             $this->content = '<div class="postie-post">' . $this->content . '</div>';
         }
@@ -781,10 +794,10 @@ class PostieMessage {
 
     function email_error($subject, $message) {
         $recipients = array();
-        if ($this->config['postie_log_error_notify'] == '(Nobody)') {
+        if ($this->config->postie_log_error_notify == '(Nobody)') {
             return;
         }
-        if ($this->config['postie_log_error_notify'] == '(All Admins)') {
+        if ($this->config->postie_log_error_notify == '(All Admins)') {
             foreach (get_users(array('role' => 'administrator', 'blog_id' => get_current_blog_id())) as $user) {
                 $recipients[] = $user->user_email;
             }
@@ -792,7 +805,7 @@ class PostieMessage {
                 return;
             }
         } else {
-            $user = get_user_by('login', $this->config['postie_log_error_notify']);
+            $user = get_user_by('login', $this->config->postie_log_error_notify);
             if ($user === false) {
                 return;
             }
@@ -919,23 +932,23 @@ class PostieMessage {
             switch ($mimetype_primary) {
                 case 'text':
                     DebugEcho("save_attachments_worker: text attachment");
-                    $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config['icon_set'], $this->config['icon_size']);
+                    $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config->icon_set, $this->config->icon_size);
                     $attachment['template'] = "<a href='$file'>" . $icon . $filename . '</a>' . "\n";
                     break;
 
                 case 'image':
                     DebugEcho("save_attachments_worker: image attachment");
-                    $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $this->config['imagetemplate'], $filename) . "\n";
+                    $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $this->config->imagetemplate, $filename) . "\n";
                     break;
 
                 case 'audio':
                     DebugEcho("save_attachments_worker: audio attachment");
-                    if (in_array($fileext, $this->config['audiotypes'])) {
+                    if (in_array($fileext, $this->config->audiotypes)) {
                         DebugEcho("save_attachments_worker: using audio template: $mimetype_secondary");
-                        $audioTemplate = $this->config['audiotemplate'];
+                        $audioTemplate = $this->config->audiotemplate;
                     } else {
                         DebugEcho("save_attachments_worker: using default audio template: $mimetype_secondary");
-                        $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config['icon_set'], $this->config['icon_size']);
+                        $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config->icon_set, $this->config->icon_size);
                         $audioTemplate = '<a href="{FILELINK}">' . $icon . '{FILENAME}</a>';
                     }
                     $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $audioTemplate, $filename);
@@ -943,15 +956,15 @@ class PostieMessage {
 
                 case 'video':
                     DebugEcho("save_attachments_worker: video attachment");
-                    if (in_array($fileext, $this->config['video1types'])) {
+                    if (in_array($fileext, $this->config->video1types)) {
                         DebugEcho("save_attachments_worker: using video1 template: $fileext");
-                        $videoTemplate = $this->config['video1template'];
-                    } elseif (in_array($fileext, $this->config['video2types'])) {
+                        $videoTemplate = $this->config->video1template;
+                    } elseif (in_array($fileext, $this->config->video2types)) {
                         DebugEcho("save_attachments_worker: using video2 template: $fileext");
-                        $videoTemplate = $this->config['video2template'];
+                        $videoTemplate = $this->config->video2template;
                     } else {
                         DebugEcho("save_attachments_worker: using default template: $fileext");
-                        $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config['icon_set'], $this->config['icon_size']);
+                        $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config->icon_set, $this->config->icon_size);
                         $videoTemplate = '<a href="{FILELINK}">' . $icon . '{FILENAME}</a>';
                     }
                     $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $videoTemplate, $filename);
@@ -959,8 +972,8 @@ class PostieMessage {
 
                 default :
                     DebugEcho("save_attachments_worker: generic attachment ($mimetype_primary)");
-                    $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config['icon_set'], $this->config['icon_size']);
-                    $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $this->config['generaltemplate'], $filename, $icon) . "\n";
+                    $icon = $this->get_attachment_icon($file, $mimetype_primary, $mimetype_secondary, $this->config->icon_set, $this->config->icon_size);
+                    $attachment['template'] = $this->parse_template($file_id, $mimetype_primary, $this->config->generaltemplate, $filename, $icon) . "\n";
                     break;
             }
             DebugEcho("save_attachments_worker: done with $filename");
@@ -1010,11 +1023,11 @@ class PostieMessage {
             $mimetype_secondary = $mimeparts[1];
         } else {
             DebugEcho("save_attachment: secondary lookup failed, checking configured extensions");
-            if (in_array($fileext, $this->config['audiotypes'])) {
+            if (in_array($fileext, $this->config->audiotypes)) {
                 DebugEcho("save_attachment: found audio extension");
                 $mimetype_primary = 'audio';
                 $mimetype_secondary = $fileext;
-            } elseif (in_array($fileext, array_merge($this->config['video1types'], $this->config['video2types']))) {
+            } elseif (in_array($fileext, array_merge($this->config->video1types, $this->config->video2types))) {
                 DebugEcho("save_attachment: found video extension");
                 $mimetype_primary = 'video';
                 $mimetype_secondary = $fileext;
@@ -1050,7 +1063,7 @@ class PostieMessage {
                 if (!is_wp_error($file_id)) {
                     $attachment['wp_id'] = $file_id;
                     //set the first image we come across as the featured image
-                    if ($this->config['featured_image'] && !has_post_thumbnail($post_id)) {
+                    if ($this->config->featured_image && !has_post_thumbnail($post_id)) {
                         DebugEcho("save_attachment: featured image: $file_id");
                         set_post_thumbnail($post_id, $file_id);
                     }
@@ -1084,7 +1097,7 @@ class PostieMessage {
 
             default:
                 DebugEcho("save_attachment: found file type: " . $mimetype_primary);
-                if (in_array($mimetype_primary, $this->config['supported_file_types'])) {
+                if (in_array($mimetype_primary, $this->config->supported_file_types)) {
                     //pgp signature - then forget it
                     if ($mimetype_secondary == 'pgp-signature') {
                         DebugEcho("save_attachment: found pgp-signature - done");
@@ -1102,8 +1115,8 @@ class PostieMessage {
                 } else {
                     EchoError("$filename has an unsupported MIME type '$mimetype_primary' and was not added.");
                     DebugEcho("save_attachment: Not in supported filetype list: '$mimetype_primary'");
-                    DebugDump($this->config['supported_file_types']);
-                    $this->email_error("Unsupported MIME type: $mimetype_primary", "$filename has an unsupported MIME type $mimetype_primary and was not added.\nSupported types:\n" . print_r($this->config['supported_file_types'], true));
+                    DebugDump($this->config->supported_file_types);
+                    $this->email_error("Unsupported MIME type: $mimetype_primary", "$filename has an unsupported MIME type $mimetype_primary and was not added.\nSupported types:\n" . print_r($this->config->supported_file_types, true));
                 }
                 break;
         }
@@ -1260,7 +1273,7 @@ class PostieMessage {
             return true;
         }
 
-        $bannedFiles = $this->config['banned_files_list'];
+        $bannedFiles = $this->config->banned_files_list;
 
         if (empty($filename) || empty($bannedFiles)) {
             return false;
@@ -1278,7 +1291,7 @@ class PostieMessage {
 
     function extract_content() {
         $this->content = '';
-        if ($this->config['prefer_text_type'] == 'html') {
+        if ($this->config->prefer_text_type == 'html') {
             if (isset($this->email['html'])) {
                 DebugEcho('get_content: html');
                 $this->content = $this->email['html'];
@@ -1319,11 +1332,11 @@ class PostieMessage {
      */
     function extract_subject() {
         //assign the default title/subject
-        $this->subject = $this->config[PostieConfigOptions::DefaultTitle];
+        $this->subject = $this->config->default_title;
 
         if (empty($this->email['headers']['subject'])) {
             DebugEcho("get_subject: No subject in email");
-            if ($this->config['allow_subject_in_mail']) {
+            if ($this->config->allow_subject_in_mail) {
                 $this->extract_subject_body();
             }
             $this->email['headers']['subject'] = $this->subject;
@@ -1331,11 +1344,11 @@ class PostieMessage {
             $this->subject = $this->email['headers']['subject'];
             DebugEcho(("get_subject: Predecoded subject: $this->subject"));
 
-            if ($this->config['allow_subject_in_mail']) {
+            if ($this->config->allow_subject_in_mail) {
                 $this->extract_subject_body();
             }
         }
-        if (!$this->config['allow_html_in_subject']) {
+        if (!$this->config->allow_html_in_subject) {
             DebugEcho("get_subject: subject before htmlentities: $this->subject");
             $this->subject = htmlentities($this->subject, ENT_COMPAT);
             DebugEcho("get_subject: subject after htmlentities: $this->subject");
@@ -1525,7 +1538,7 @@ class PostieMessage {
             }
             DebugEcho("get_parent_postid: tmpSubject: $tmpSubject");
             $checkExistingPostQuery = "SELECT ID FROM $wpdb->posts WHERE post_title LIKE %s AND post_status = 'publish' AND comment_status = 'open' AND post_type=%s ORDER BY post_date DESC";
-            $id = $wpdb->get_var($wpdb->prepare($checkExistingPostQuery, $tmpSubject, $this->config[PostieConfigOptions::PostType]));
+            $id = $wpdb->get_var($wpdb->prepare($checkExistingPostQuery, $tmpSubject, $this->config->post_type));
             if (empty($id)) {
                 DebugEcho("get_parent_postid: No parent id found");
             } else {
