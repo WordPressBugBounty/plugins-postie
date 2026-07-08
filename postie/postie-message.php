@@ -140,7 +140,11 @@ class PostieMessage {
             $this->config->post_status = 'draft';
             DebugEcho("process: not authorized, looking up default user " . $this->config->admin_username);
             $user = get_user_by('login', $this->config->admin_username);
-            $this->poster = $user->ID;
+            if ($user) {
+                $this->poster = $user->ID;
+            } else {
+                $this->poster = 0;
+            }
         }
 
         try {
@@ -262,7 +266,7 @@ class PostieMessage {
     function is_emailaddress_authorized($address, $authorized_addresses) {
         $r = false;
         if (is_array($authorized_addresses)) {
-            $a = strtolower(trim($address));
+            $a = strtolower(trim((string)$address));
             if (!empty($a)) {
                 $r = in_array($a, array_map('strtolower', $authorized_addresses));
             }

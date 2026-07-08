@@ -211,44 +211,21 @@ class fEmail {
 
         // Check to see if we can run sendmail via popen
         $executable = FALSE;
-        $safe_mode = FALSE;
 
-        if (!in_array(strtolower(ini_get('safe_mode')), array('0', '', 'off'))) {
-            $safe_mode = TRUE;
-            $exec_dirs = explode(';', ini_get('safe_mode_exec_dir'));
-            foreach ($exec_dirs as $exec_dir) {
-                if (stripos($sendmail_dir, $exec_dir) !== 0) {
-                    continue;
-                }
-                if (file_exists($sendmail_path) && is_executable($sendmail_path)) {
-                    $executable = TRUE;
-                }
-            }
-        } else {
-            if (file_exists($sendmail_path) && is_executable($sendmail_path)) {
-                $executable = TRUE;
-            }
+        if (file_exists($sendmail_path) && is_executable($sendmail_path)) {
+            $executable = TRUE;
         }
 
         if ($executable) {
             self::$popen_sendmail = TRUE;
         } else {
             self::$convert_crlf = TRUE;
-            if ($safe_mode) {
-                trigger_error(
-                        self::compose('The proper fix for sending through qmail is not possible since safe mode is turned on and the sendmail binary is not in one of the paths defined by the safe_mode_exec_dir ini setting'), E_USER_WARNING
-                );
-                trigger_error(
-                        self::compose('Trying to fix qmail by converting all \r\n to \n. This will cause invalid (but possibly functioning) email headers to be generated.'), E_USER_WARNING
-                );
-            } else {
-                trigger_error(
-                        self::compose('The proper fix for sending through qmail is not possible since the sendmail binary could not be found or is not executable'), E_USER_WARNING
-                );
-                trigger_error(
-                        self::compose('Trying to fix qmail by converting all \r\n to \n. This will cause invalid (but possibly functioning) email headers to be generated.'), E_USER_WARNING
-                );
-            }
+            trigger_error(
+                    self::compose('The proper fix for sending through qmail is not possible since the sendmail binary could not be found or is not executable'), E_USER_WARNING
+            );
+            trigger_error(
+                    self::compose('Trying to fix qmail by converting all \r\n to \n. This will cause invalid (but possibly functioning) email headers to be generated.'), E_USER_WARNING
+            );
         }
     }
 
@@ -276,7 +253,7 @@ class fEmail {
 
         if (strpos(self::$fqdn, '.') === FALSE) {
 
-            $can_exec = !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions')))) && !ini_get('safe_mode');
+            $can_exec = !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
             if (fCore::checkOS('linux') && $can_exec) {
                 self::$fqdn = trim(shell_exec('hostname --fqdn'));
             } elseif (fCore::checkOS('windows')) {
@@ -1432,9 +1409,6 @@ class fEmail {
      * @return fEmail  The email object, to allow for method chaining
      */
     public function setBounceToEmail($email) {
-        if (ini_get('safe_mode') && !fCore::checkOS('windows')) {
-            throw new fProgrammerException('It is not possible to set a Bounce-To Email address when safe mode is enabled on a non-Windows server');
-        }
         if (!$email) {
             return;
         }

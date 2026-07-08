@@ -224,29 +224,33 @@ class fCore {
      * @return string  The formatted backtrace
      */
     static public function backtrace($remove_lines = 0, $backtrace = NULL) {
-        if ($remove_lines !== NULL && !is_numeric($remove_lines)) {
-            $remove_lines = 0;
-        }
-
-        settype($remove_lines, 'integer');
+        $args = func_get_args();
+        $remove_lines_val = isset($args[0]) ? $args[0] : 0;
+        $backtrace_val = isset($args[1]) ? $args[1] : NULL;
 
         $doc_root = realpath($_SERVER['DOCUMENT_ROOT']);
         $doc_root .= (substr($doc_root, -1) != DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR : '';
 
-        if ($backtrace === NULL) {
-            $backtrace = debug_backtrace();
+        if ($backtrace_val === NULL) {
+            $backtrace_val = debug_backtrace();
         }
 
-        while ($remove_lines > 0) {
-            array_shift($backtrace);
-            $remove_lines--;
+        if ($remove_lines_val !== NULL && !is_numeric($remove_lines_val)) {
+            $remove_lines_val = 0;
         }
 
-        $backtrace = array_reverse($backtrace);
+        settype($remove_lines_val, 'integer');
+
+        while ($remove_lines_val > 0) {
+            array_shift($backtrace_val);
+            $remove_lines_val--;
+        }
+
+        $backtrace_val = array_reverse($backtrace_val);
 
         $bt_string = '';
         $i = 0;
-        foreach ($backtrace as $call) {
+        foreach ($backtrace_val as $call) {
             if ($i) {
                 $bt_string .= "\n";
             }

@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 6.9
-Stable tag: 1.9.77
+Stable tag: 1.9.78
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -107,6 +107,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.78 (2026-07-08) =
+* Revert changes that are not PHP 7.0 compatible
+
 = 1.9.77 (2026-07-06) =
 * Add new setting to ignore messages from unknown email address rather than creating a draft.
 

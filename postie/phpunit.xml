@@ -10,7 +10,7 @@
     </source>
     <testsuites>
         <testsuite name="unit">
-            <directory suffix=".php">./test</directory>
+            <directory suffix="Test.php">./test</directory>
         </testsuite>
     </testsuites>
 </phpunit>

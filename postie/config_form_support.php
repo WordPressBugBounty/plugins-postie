@@ -1,3 +1,4 @@
+<?php // Silence is golden. ?>
 <div id="simpleTabs-content-7" class="simpleTabs-content">
     <div style="">
         <h3>Postie Support</h3>

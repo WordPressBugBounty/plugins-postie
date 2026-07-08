@@ -42,14 +42,31 @@ Since this is a WordPress plugin, "building" typically involves ensuring the dir
 
 ## Development and Testing
 
-### Testing
+### Testing and Linting
 Tests are located in the `test/` directory. The presence of `wpstub.php` indicates that tests are designed to run in isolation by mocking WordPress core functions, rather than requiring a full WordPress environment.
 
-*   **Framework:** Likely PHPUnit (standard for WP plugins), though no `phpunit.xml` was immediately found in the root.
-*   **Running Tests:** Execute PHPUnit pointing to the `test` directory or specific test files. Ensure `bootstrap.php` is loaded.
+*   **Framework:** PHPUnit (standard for WP plugins), utilizing `test/bootstrap.php` for isolated environment mocking.
+*   **Running Tests & Enforcing Linter:** To guarantee PHP 7.0 compatibility, the compatibility linter **must** be run every time tests are executed. A Composer command is available that chains the two checks together, running the linter first, followed by PHPUnit:
+    ```bash
+    composer test
+    ```
+*   **Running Tests Separately:** To run only the PHPUnit suite:
+    ```bash
+    vendor/bin/phpunit
+    ```
+*   **Running Linter Separately:** To run only the PHP 7.0 compatibility scanner:
+    ```bash
+    vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/
+    ```
 
 ### Conventions
 *   **Coding Style:** Follows general WordPress Coding Standards.
+*   **PHP Version Compatibility:** The plugin must strictly maintain compatibility with **PHP 7.0**. Therefore, only PHP 7.0 compatible syntax is permitted in the codebase.
+    *   **NO** typed class properties (e.g., `public string $prop` - PHP 7.4+).
+    *   **NO** nullable typed properties (e.g., `public ?string $prop` - PHP 7.4+).
+    *   **NO** `: void` return type declarations (PHP 7.1+).
+    *   **NO** union types, arrow functions (`fn()`), match expressions, or `??=` operators.
+    *   Scalar type hints in function parameters (e.g., `string`, `int`, `bool`, `array`) and scalar/array return typehints (e.g., `: bool`, `: array`, `: string`) are supported in PHP 7.0 and are permitted.
 *   **Hooks:** Extensive use of `add_filter` and `add_action`. New features should likely use these hooks rather than modifying core logic where possible.
 *   **Configuration:** Settings are stored in the WP options table (`postie-settings`) and managed via the `PostieConfig` class. The configuration is accessed globally via `postie_config_read()`, which returns a strongly-typed `PostieSettings` DTO. This DTO implements `ArrayAccess` to maintain complete backwards compatibility with legacy array lookups (e.g., `$config['post_type']`), but direct, strongly-typed property accesses (e.g., `$config->post_type`) should be used for all new development.
 
@@ -58,9 +75,9 @@ Tests are located in the `test/` directory. The presence of `wpstub.php` indicat
 Adding a new configuration setting is a clean and structured process:
 
 1.  **Declare the Property in `PostieSettings`** (`postie-config.class.php`):
-    Add your new setting as a public typed property inside the `PostieSettings` class with its default value:
+    Add your new setting as a public property inside the `PostieSettings` class with its default value (without type hints to maintain PHP 7.0 compatibility):
     ```php
-    public bool $my_new_setting = false;
+    public $my_new_setting = false;
     ```
 2.  **Classify the Type for Automatic Casting** (`postie-config.class.php`):
     Add your property's key to the corresponding type list array (`$boolKeys`, `$intKeys`, `$floatKeys`, or `$arrayKeys`) in the `PostieSettings::castValue()` helper method to ensure input is sanitized on load:

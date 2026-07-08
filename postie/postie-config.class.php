@@ -15,98 +15,98 @@
  * Removing this interface would cause fatal runtime type errors in those custom extensions.
  */
 class PostieSettings implements \ArrayAccess {
-    public string $add_meta = 'no';
-    public string $admin_username = 'admin';
-    public bool $allow_html_in_body = true;
-    public bool $allow_html_in_subject = true;
-    public bool $allow_subject_in_mail = true;
-    public string $audiotemplate = '';
-    public array $audiotypes = array('m4a', 'mp3', 'ogg', 'wav', 'mpeg');
-    public array $authorized_addresses = array();
-    public array $banned_files_list = array();
-    public string $confirmation_email = '';
-    public bool $convertnewline = false;
-    public bool $converturls = true;
-    public bool $custom_image_field = false;
-    public mixed $default_post_category = null;
-    public bool $category_match = true;
-    public array $default_post_tags = array();
-    public string $default_title = "Live From The Field";
-    public bool $delete_mail_after_processing = true;
-    public bool $drop_signature = true;
-    public bool $filternewlines = true;
-    public bool $forward_rejected_mail = true;
-    public string $icon_set = 'silver';
-    public int $icon_size = 32;
-    public bool $auto_gallery = false;
-    public bool $image_new_window = false;
-    public string $image_placeholder = '#img%#';
-    public mixed $images_append = true;
-    public string $imagetemplate = '';
-    public array $imagetemplates = array();
-    public string $input_protocol = 'pop3';
-    public string $input_connection = 'sockets';
-    public string $interval = 'twiceperhour';
-    public bool $keep_unknown_emails_as_draft = true;
-    public ?string $mail_server = null;
-    public int $mail_server_port = 110;
-    public ?string $mail_userid = null;
-    public ?string $mail_password = null;
-    public int $maxemails = 0;
-    public string $message_start = '';
-    public string $message_end = '';
-    public string $message_encoding = 'UTF-8';
-    public bool $message_dequote = true;
-    public string $post_status = 'publish';
-    public string $prefer_text_type = 'plain';
-    public bool $return_to_sender = false;
-    public array $role_access = array();
-    public string $selected_audiotemplate = 'simple_link';
-    public string $selected_imagetemplate = 'wordpress_default';
-    public string $selected_video1template = 'vshortcode';
-    public string $selected_video2template = 'simple_link';
-    public bool $shortcode = false;
-    public array $sig_pattern_list = array('--\s?[\r\n]?', '--\s', '--', '---');
-    public array $smtp = array();
-    public bool $start_image_count_at_zero = false;
-    public array $supported_file_types = array('application');
-    public bool $turn_authorization_off = false;
-    public float $time_offset = 0.0;
-    public string $video1template = '';
-    public array $video1types = array('mp4', 'mpeg4', '3gp', '3gpp', '3gpp2', '3gp2', 'mov', 'mpeg', 'quicktime');
-    public string $video2template = '';
-    public array $video2types = array('x-flv');
-    public array $video1templates = array();
-    public array $video2templates = array();
-    public string $wrap_pre = 'no';
-    public bool $featured_image = false;
-    public bool $include_featured_image = true;
-    public bool $email_tls = false;
-    public string $post_format = 'standard';
-    public string $post_type = 'post';
-    public array $generaltemplates = array();
-    public string $generaltemplate = '';
-    public string $selected_generaltemplate = 'postie_default';
-    public bool $generate_thumbnails = true;
-    public bool $reply_as_comment = true;
-    public bool $force_user_login = false;
-    public string $auto_gallery_link = 'default';
-    public bool $ignore_mail_state = false;
-    public bool $strip_reply = true;
-    public bool $postie_log_error = true;
-    public bool $postie_log_debug = false;
-    public bool $category_colon = true;
-    public bool $category_dash = true;
-    public bool $category_bracket = true;
-    public bool $prefer_text_convert = true;
-    public bool $category_remove = true;
-    public bool $ignore_email_date = false;
-    public bool $use_time_offset = false;
-    public string $postie_log_error_notify = '(All Admins)';
-    public bool $image_resize = true;
-    public bool $duplicate_comments = true;
-    public bool $legacy_commands = true;
-    public bool $add_wrapper_div = true;
+    public $add_meta = 'no';
+    public $admin_username = 'admin';
+    public $allow_html_in_body = true;
+    public $allow_html_in_subject = true;
+    public $allow_subject_in_mail = true;
+    public $audiotemplate = '';
+    public $audiotypes = array('m4a', 'mp3', 'ogg', 'wav', 'mpeg');
+    public $authorized_addresses = array();
+    public $banned_files_list = array();
+    public $confirmation_email = '';
+    public $convertnewline = false;
+    public $converturls = true;
+    public $custom_image_field = false;
+    public $default_post_category = null;
+    public $category_match = true;
+    public $default_post_tags = array();
+    public $default_title = "Live From The Field";
+    public $delete_mail_after_processing = true;
+    public $drop_signature = true;
+    public $filternewlines = true;
+    public $forward_rejected_mail = true;
+    public $icon_set = 'silver';
+    public $icon_size = 32;
+    public $auto_gallery = false;
+    public $image_new_window = false;
+    public $image_placeholder = '#img%#';
+    public $images_append = true;
+    public $imagetemplate = '';
+    public $imagetemplates = array();
+    public $input_protocol = 'pop3';
+    public $input_connection = 'sockets';
+    public $interval = 'twiceperhour';
+    public $keep_unknown_emails_as_draft = true;
+    public $mail_server = null;
+    public $mail_server_port = 110;
+    public $mail_userid = null;
+    public $mail_password = null;
+    public $maxemails = 0;
+    public $message_start = '';
+    public $message_end = '';
+    public $message_encoding = 'UTF-8';
+    public $message_dequote = true;
+    public $post_status = 'publish';
+    public $prefer_text_type = 'plain';
+    public $return_to_sender = false;
+    public $role_access = array();
+    public $selected_audiotemplate = 'simple_link';
+    public $selected_imagetemplate = 'wordpress_default';
+    public $selected_video1template = 'vshortcode';
+    public $selected_video2template = 'simple_link';
+    public $shortcode = false;
+    public $sig_pattern_list = array('--\s?[\r\n]?', '--\s', '--', '---');
+    public $smtp = array();
+    public $start_image_count_at_zero = false;
+    public $supported_file_types = array('application');
+    public $turn_authorization_off = false;
+    public $time_offset = 0.0;
+    public $video1template = '';
+    public $video1types = array('mp4', 'mpeg4', '3gp', '3gpp', '3gpp2', '3gp2', 'mov', 'mpeg', 'quicktime');
+    public $video2template = '';
+    public $video2types = array('x-flv');
+    public $video1templates = array();
+    public $video2templates = array();
+    public $wrap_pre = 'no';
+    public $featured_image = false;
+    public $include_featured_image = true;
+    public $email_tls = false;
+    public $post_format = 'standard';
+    public $post_type = 'post';
+    public $generaltemplates = array();
+    public $generaltemplate = '';
+    public $selected_generaltemplate = 'postie_default';
+    public $generate_thumbnails = true;
+    public $reply_as_comment = true;
+    public $force_user_login = false;
+    public $auto_gallery_link = 'default';
+    public $ignore_mail_state = false;
+    public $strip_reply = true;
+    public $postie_log_error = true;
+    public $postie_log_debug = false;
+    public $category_colon = true;
+    public $category_dash = true;
+    public $category_bracket = true;
+    public $prefer_text_convert = true;
+    public $category_remove = true;
+    public $ignore_email_date = false;
+    public $use_time_offset = false;
+    public $postie_log_error_notify = '(All Admins)';
+    public $image_resize = true;
+    public $duplicate_comments = true;
+    public $legacy_commands = true;
+    public $add_wrapper_div = true;
 
     public function __construct(array $data) {
         foreach ($data as $key => $val) {
@@ -181,15 +181,15 @@ class PostieSettings implements \ArrayAccess {
     }
 
     #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value): void {
+    public function offsetSet($offset, $value) {
         if (property_exists($this, $offset)) {
             $this->$offset = $this->castValue($offset, $value);
         }
     }
 
     #[\ReturnTypeWillChange]
-    public function offsetUnset($offset): void {
-        // Strongly typed properties are not unset.
+    public function offsetUnset($offset) {
+        // Settings properties are not unset.
     }
 
     public function toArray(): array {
