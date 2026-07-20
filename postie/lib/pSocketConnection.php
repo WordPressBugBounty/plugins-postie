@@ -26,7 +26,17 @@ class pSocketConnection extends pConnection {
             return;
         }
 
-        $connstr = ($this->secure ? 'tls://' : '') . "$this->host:$this->port";
+        // Use implicit TLS connection string prefix only if secure is requested and we are not on a plain-text port
+        $use_implicit_tls = false;
+        if ($this->secure) {
+            if ($this->type == 'imap') {
+                $use_implicit_tls = ($this->port != 143);
+            } elseif ($this->type == 'pop3') {
+                $use_implicit_tls = ($this->port != 110);
+            }
+        }
+
+        $connstr = ($use_implicit_tls ? 'tls://' : '') . "$this->host:$this->port";
         DebugEcho("Socket: $connstr");
         $error_number = 0;
         $error_string = '';
@@ -46,9 +56,16 @@ class pSocketConnection extends pConnection {
         $openSsl = extension_loaded('openssl');
         if ($this->type == 'imap') {
             DebugEcho("Socket: IMAP");
-            if ($this->secure && $openSsl) {
+            if ($this->secure && !$use_implicit_tls && $openSsl) {
                 $response = $this->write('CAPABILITY');
-                if (preg_match('#\bstarttls\b#i', $response[0])) {
+                $supports_starttls = false;
+                foreach ($response as $line) {
+                    if (preg_match('#\bstarttls\b#i', $line)) {
+                        $supports_starttls = true;
+                        break;
+                    }
+                }
+                if ($supports_starttls) {
                     $this->write('STARTTLS');
                     do {
                         if (isset($res)) {
@@ -61,8 +78,8 @@ class pSocketConnection extends pConnection {
                 if (!$openSsl) {
                     DebugEcho("Socket: OpenSSL not enabled");
                 }
-                if ($this->secure) {
-                    DebugEcho("Socket: IMAP-SSL was not selected");
+                if ($this->secure && $use_implicit_tls) {
+                    DebugEcho("Socket: Connected via Implicit TLS");
                 }
             }
 
@@ -81,7 +98,7 @@ class pSocketConnection extends pConnection {
                 preg_match('#<[^@]+@[^>]+>#', $response[0], $match);
             }
 
-            if ($this->secure && $openSsl) {
+            if ($this->secure && !$use_implicit_tls && $openSsl) {
                 DebugEcho("Socket: attempting a secure connection");
                 $response = $this->write('STLS', 1);
                 if ($response[0][0] == '+') {
@@ -105,8 +122,8 @@ class pSocketConnection extends pConnection {
                 if (!$openSsl) {
                     DebugEcho("Socket: OpenSSL not enabled");
                 }
-                if ($this->secure) {
-                    DebugEcho("Socket: POP-SSL was not selected");
+                if ($this->secure && $use_implicit_tls) {
+                    DebugEcho("Socket: Connected via Implicit TLS");
                 }
             }
 

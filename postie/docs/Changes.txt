@@ -35,6 +35,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.79 (2026-07-20) =
+* Provide better support for SSL connections to email server
+
 = 1.9.78 (2026-07-08) =
 * Revert changes that are not PHP 7.0 compatible
 
