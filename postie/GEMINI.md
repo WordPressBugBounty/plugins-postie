@@ -108,6 +108,29 @@ Adding a new configuration setting is a clean and structured process:
 6.  **Verify via Unit Tests** (`test/postiesettingsTest.php`):
     Assert your new setting cascades and sanitizes correctly in `testDefaultsFallback()` and/or initialization test cases.
 
+## Releasing a New Version
+
+Releasing a new version is a streamlined process guided by the deployment configurations in `deploy/_deploy.txt`. Do **not** manually update `readme.txt`, as it is automatically generated and updated by the deployment script.
+
+### Release Steps:
+
+1.  **Changelog & Documentation**:
+    *   Update `docs/Changes.txt` under the `== CHANGELOG ==` section with the new version number, release date (formatted `YYYY-MM-DD`), and a list of modifications.
+    *   Add an optional `Upgrade Notice` in `docs/Changes.txt` if there are critical notices for users.
+2.  **Version Numbers**:
+    *   Update the version number in `docs/Postie.txt` (the `Stable tag` setting).
+    *   Update the `Version` field in the main plugin comment block at the top of `postie.php`.
+3.  **Validate**:
+    *   Run the test suite and compatibility scanner via `composer test` to ensure complete code compliance.
+4.  **Execute Deployment Script**:
+    *   Run `deploy\deploy.cmd` (or `deploy/deploy.sh` on Unix-like environments) to automatically generate the `readme.txt` and build/package the release assets.
+5.  **Source Control**:
+    *   Commit all finalized files locally: `git commit -am "Prepare <version> release"`
+    *   Create a release tag: `git tag -a <version> -m "Release <version>"`
+6.  **Public Announcements**:
+    *   Add a release post on the official Postie site: `http://postieplugin.com/`
+    *   Add a release post on the WordPress Support Forums: `http://wordpress.org/support/plugin/postie`
+
 ## Key Files to Watch
 *   `postie.php`: Entry point.
 *   `postie-functions.php`: Helper functions (if applicable, though logic seems distributed in classes).
