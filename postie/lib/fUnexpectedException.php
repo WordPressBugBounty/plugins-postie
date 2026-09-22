@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * An exception that should probably not be handled by the display code, fCore::enableExceptionHandler() is recommended

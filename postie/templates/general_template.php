@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 $postie_default = '<a href="{FILELINK}">{ICON} {FILENAME}</a>';
 

@@ -1,8 +1,12 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 //http_response_code(403);
-$protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
+$raw_protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_PROTOCOL'])) : 'HTTP/1.0');
+$protocol = (preg_match('/^HTTP\/[0-9.]+$/', $raw_protocol) ? $raw_protocol : 'HTTP/1.0');
 header("$protocol 403 Forbidden");
-$GLOBALS['http_response_code'] = $code;
+$GLOBALS['http_response_code'] = 403;
 ?>
 <html>
     <head>

@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.80
+  Version: 1.9.82
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3625130 2026-07-27 20:24:45Z WayneAllen $
+  $Id: postie.php 3706358 2026-09-21 21:53:17Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
@@ -133,18 +133,20 @@ if (!class_exists('PostieInit')) {
 
         function site_status_tests_filter($tests) {
             $tests['direct']['postie1'] = array(
-                'label' => __('Postie Test'),
+                'label' => __('Postie Test', 'postie'),
                 'test' => array($this, 'test_delete_mail_after_processing'),
             );
             $tests['direct']['postie2'] = array(
-                'label' => __('Postie Test'),
+                'label' => __('Postie Test', 'postie'),
                 'test' => array($this, 'test_turn_authorization_off'),
             );
             return $tests;
         }
 
         function query_filter($query) {
-            DebugEcho("Query: $query");
+            if (Postie::is_debugmode()) {
+                DebugEcho("Query: $query");
+            }
 
             return $query;
         }
@@ -154,13 +156,13 @@ if (!class_exists('PostieInit')) {
             $config = postie_config_read();
             $enabled = $config->delete_mail_after_processing;
             $result = array(
-                'label' => __('Postie should delete emails after processing'),
+                'label' => __('Postie should delete emails after processing', 'postie'),
                 'status' => $enabled ? 'good' : 'recommended',
                 'badge' => array(
-                    'label' => __('Performance'),
+                    'label' => __('Performance', 'postie'),
                     'color' => 'blue',
                 ),
-                'description' => sprintf('<p>%s</p>', __('If emails are not deleted they will be imported every time Postie runs.')
+                'description' => sprintf('<p>%s</p>', __('If emails are not deleted they will be imported every time Postie runs.', 'postie')
                 ),
                 'actions' => '',
                 'test' => 'postie_delete_mail_after_processing',
@@ -173,13 +175,13 @@ if (!class_exists('PostieInit')) {
             $config = postie_config_read();
             $enabled = !$config->turn_authorization_off;
             $result = array(
-                'label' => __('Postie should only allow authorized users to post'),
+                'label' => __('Postie should only allow authorized users to post', 'postie'),
                 'status' => $enabled ? 'good' : 'critical',
                 'badge' => array(
-                    'label' => __('Security'),
+                    'label' => __('Security', 'postie'),
                     'color' => 'blue',
                 ),
-                'description' => sprintf('<p>%s</p>', __('Allowing anyone who knows your Postie email address to post can result in unwanted posts.')
+                'description' => sprintf('<p>%s</p>', __('Allowing anyone who knows your Postie email address to post can result in unwanted posts.', 'postie')
                 ),
                 'actions' => '',
                 'test' => 'postie_turn_authorization_off',
@@ -194,12 +196,14 @@ if (!class_exists('PostieInit')) {
         }
 
         function plugins_loaded_action() {
+            // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
             load_plugin_textdomain('postie', false, dirname(plugin_basename(__FILE__)) . '/languages/');
         }
 
         function init_action() {
             global $wp_version;
-            if (version_compare($wp_version, '5.3') == -1) {
+            $version = isset($wp_version) ? $wp_version : '0.0';
+            if (version_compare($version, '5.3') == -1) {
                 require_once( ABSPATH . WPINC . '/class-oembed.php' );
             } else {
                 require_once( ABSPATH . WPINC . '/class-wp-oembed.php' );
@@ -239,13 +243,13 @@ if (!class_exists('PostieInit')) {
                         postie_test_config();
                         die();
                     default :
-                        die('Unknown option: ' . htmlentities($wp->query_vars['postie']));
+                        die('Unknown option: ' . esc_html($wp->query_vars['postie']));
                 }
             }
         }
 
         function admin_init_action() {
-            wp_register_style('postie-style', plugins_url('css/style.css', __FILE__));
+            wp_register_style('postie-style', plugins_url('css/style.css', __FILE__), array(), POSTIE_VERSION);
             register_setting('postie-settings', 'postie-settings', array($this, 'lazy_validate_settings'));
         }
 
@@ -320,38 +324,44 @@ if (!class_exists('PostieInit')) {
 
         function postie_markdown_warning() {
             echo "<div id='postie-lst-warning' class='error'><p><strong>";
-            _e("You currently have the Markdown plugin installed. It will cause problems if you send in HTML email. Please turn it off if you intend to send email using HTML.", 'postie');
+            esc_html_e("You currently have the Markdown plugin installed. It will cause problems if you send in HTML email. Please turn it off if you intend to send email using HTML.", 'postie');
             echo "</strong></p></div>";
         }
 
         function postie_enter_info() {
-            echo "<div id='postie-info-warning' class='updated fade'><p><strong>" . __('Postie is almost ready.', 'postie') . "</strong> "
-            . sprintf(__('You must <a href="%1$s">enter your email settings</a> for it to work.', 'postie'), "admin.php?page=postie-settings")
+            echo "<div id='postie-info-warning' class='updated fade'><p><strong>" . esc_html__('Postie is almost ready.', 'postie') . "</strong> "
+            . wp_kses_post( sprintf(
+                /* translators: %1$s: URL to Postie settings page */
+                __('You must <a href="%1$s">enter your email settings</a> for it to work.', 'postie'),
+                "admin.php?page=postie-settings"
+            ) )
             . "</p></div> ";
         }
 
         function postie_iconv_warning() {
             echo "<div id='postie-lst-warning' class='error'><p><strong>";
-            _e("Warning! Postie requires that iconv be enabled.", 'postie');
+            esc_html_e("Warning! Postie requires that iconv be enabled.", 'postie');
             echo "</strong></p></div>";
         }
 
         function postie_php_warning() {
             echo "<div id='postie-lst-warning' class='error'><p><strong>";
-            _e("Warning! Postie requires that PHP be verion 5.2 or higher. You have version " . phpversion(), 'postie');
+            /* translators: %s: PHP version */
+            printf( esc_html__( "Warning! Postie requires that PHP be verion 7 or higher. You have version %s", 'postie' ), esc_html( phpversion() ) );
             echo "</strong></p></div>";
         }
 
         function postie_curl_warning() {
             $cv = curl_version();
             echo "<div id='postie-lst-warning' class='error'><p><strong>";
-            _e("Warning! Postie requires cURL 7.30.0 or newer be installed. {$cv['version']} is installed.", 'postie');
+            /* translators: %s: curl version */
+            printf( esc_html__( "Warning! Postie requires cURL 7.30.0 or newer be installed. %s is installed.", 'postie' ), esc_html( $cv['version'] ) );
             echo "</strong></p></div>";
         }
 
         function postie_adminuser_warning() {
             echo "<div id='postie-mbstring-warning' class='error'><p><strong>";
-            echo __('Warning: the Default Poster is not a valid WordPress login. Postie may reject emails if this is not corrected.', 'postie');
+            esc_html_e('Warning: the Default Poster is not a valid WordPress login. Postie may reject emails if this is not corrected.', 'postie');
             echo "</strong></p></div>";
         }
 
@@ -384,6 +394,7 @@ if (!class_exists('PostieInit')) {
                     empty($config->mail_server_port) ||
                     empty($config->mail_userid) ||
                     empty($config->mail_password)
+                    // phpcs:ignore WordPress.Security.NonceVerification.Missing
                     ) && !isset($_POST['submit'])) {
 
                 add_action('admin_notices', array($this, 'postie_enter_info'));
@@ -397,7 +408,7 @@ if (!class_exists('PostieInit')) {
                 add_action('admin_notices', array($this, 'postie_iconv_warning'));
             }
 
-            if (!fCore::checkVersion('5.2.0')) {
+            if (!fCore::checkVersion('7.0')) {
                 add_action('admin_notices', array($this, 'postie_php_warning'));
             }
 

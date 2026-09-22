@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-config.class.php');
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie.class.php');
@@ -8,20 +11,24 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-message.php');
  * These are the only official public methods for accessing postie functionality
  */
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function lookup_taxonomy($termid) {
     return postie_lookup_taxonomy_name($termid);
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function lookup_category($trial_category, $category_match) {
     return postie_lookup_category_id($trial_category, $category_match);
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function RemoveExtraCharactersInEmailAddress($address) {
     $c = new PostieConfig();
     $m = new PostieMessage(array(), $c->config_read());
     return $m->get_clean_emailaddress($address);
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function EchoError($v) {
     global $g_postie;
     if (!empty($g_postie)) {
@@ -30,14 +37,16 @@ function EchoError($v) {
     try {
         do_action('postie_log_debug', $v);
     } catch (Throwable $exc) {
-        echo('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+        echo esc_html('postie_log_debug: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
     }
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function DebugDump($v) {
     global $g_postie;
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
     $d = print_r($v, true);
-    if (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG && !empty($g_postie)) {
+    if (Postie::is_debugmode() && !empty($g_postie)) {
         $g_postie->log_onscreen($d);
     }
     try {
@@ -47,9 +56,10 @@ function DebugDump($v) {
     }
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function DebugEcho($v, $force = false) {
     global $g_postie;
-    if ($force || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
+    if ($force || Postie::is_debugmode()) {
         if (!empty($g_postie)) {
             $g_postie->log_onscreen($v);
         }

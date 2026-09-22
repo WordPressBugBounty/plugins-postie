@@ -1,4 +1,8 @@
-<?php // Silence is golden. ?>
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+// Silence is golden. ?>
 <div id="simpleTabs-content-7" class="simpleTabs-content">
     <div style="">
         <h3>Postie Support</h3>

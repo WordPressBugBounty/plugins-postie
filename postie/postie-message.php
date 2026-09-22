@@ -49,10 +49,6 @@ class PostieMessage {
         $this->email = $email;
     }
 
-    function is_debugmode() {
-        return (defined('POSTIE_DEBUG') && POSTIE_DEBUG == true);
-    }
-
     function is_email_empty() {
         return $this->email == null;
     }
@@ -70,6 +66,7 @@ class PostieMessage {
         //add Postie specific shortcodes
         try {
             DebugEcho("process: filter: Before $action");
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
             do_action($action);
         } catch (Throwable $exc) {
             EchoError("$action: " . $exc->getMessage() . "\n" . $exc->getTraceAsString());
@@ -214,7 +211,7 @@ class PostieMessage {
         DebugEcho('post_email: sending notifications');
         $this->email_notify($recipients, $postid);
 
-        if ($this->is_debugmode()) {
+        if (Postie::is_debugmode()) {
             $post = get_post($this->post_id);
             DebugEcho('post_email: resulting post');
             DebugDump($post);
@@ -391,6 +388,7 @@ class PostieMessage {
                     wp_set_current_user($poster);
                     //wp_set_auth_cookie($poster);
                     try {
+                        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
                         do_action('wp_login', $user->user_login, $user);
                     } catch (Throwable $exc) {
                         EchoError('wp_login: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
@@ -477,7 +475,9 @@ class PostieMessage {
 
         wp_mail($recipients, $subject, $message, $headers, array($attachTxt, $attachHtml));
 
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
         unlink($attachTxt);
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
         unlink($attachHtml);
     }
 
@@ -502,7 +502,7 @@ class PostieMessage {
     function create_post() {
         DebugEcho("create_post: prefer_text_type: " . $this->config->prefer_text_type);
 
-        $fulldebug = $this->is_debugmode();
+        $fulldebug = Postie::is_debugmode();
         $fulldebugdump = false;
 
         if (array_key_exists('message-id', $this->email['headers'])) {
@@ -725,7 +725,8 @@ class PostieMessage {
         $details['post_content'] = str_replace('\\', '\\\\', $details['post_content']); //replace all backslashs with double backslashes since WP will remove single backslash
         if (!$isReply) {
             DebugEcho("postie_save_post: about to insert post");
-            if ($this->is_debugmode() && !defined('SAVEQUERIES')) {
+            if (Postie::is_debugmode() && !defined('SAVEQUERIES')) {
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
                 define('SAVEQUERIES', true);
             }
 
@@ -838,7 +839,8 @@ class PostieMessage {
 
         $post_status = get_post_status($postid);
 
-        $mailtext = sprintf(__("Your email '%s' has been successfully imported into %s %s with the current status of '%s'.\n", 'postie'),
+        /* translators: 1: email subject, 2: blog name, 3: post URL, 4: post status */
+        $mailtext = sprintf(__('Your email \'%1$s\' has been successfully imported into %2$s %3$s with the current status of \'%4$s\'.', 'postie') . "\n",
                 $subject, html_entity_decode($blogname), $posturl, $post_status);
 
         try {
@@ -853,7 +855,8 @@ class PostieMessage {
         DebugEcho("email_notify: post postie_email_notify_recipients");
         DebugDump($recipients);
 
-        $subject = sprintf(__('Email imported to %s (%s)', 'postie'), html_entity_decode($blogname), $post_status);
+        /* translators: 1: blog name, 2: post status */
+        $subject = sprintf(__('Email imported to %1$s (%2$s)', 'postie'), html_entity_decode($blogname), $post_status);
         try {
             $subject = apply_filters('postie_email_notify_subject', $subject, $this->email, $postid);
         } catch (Throwable $exc) {
@@ -928,6 +931,7 @@ class PostieMessage {
             DebugEcho("save_attachments_worker: mime primary: $mimetype_primary");
 
             $attachment['primary'] = $mimetype_primary;
+            // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
             $attachment['exclude'] = false;
 
             $file_id = $attachment['wp_id'];
@@ -1120,6 +1124,7 @@ class PostieMessage {
                     EchoError("$filename has an unsupported MIME type '$mimetype_primary' and was not added.");
                     DebugEcho("save_attachment: Not in supported filetype list: '$mimetype_primary'");
                     DebugDump($this->config->supported_file_types);
+                    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
                     $this->email_error("Unsupported MIME type: $mimetype_primary", "$filename has an unsupported MIME type $mimetype_primary and was not added.\nSupported types:\n" . print_r($this->config->supported_file_types, true));
                 }
                 break;
@@ -1427,10 +1432,10 @@ class PostieMessage {
 
         $tmpFile = tempnam(get_temp_dir(), 'postie');
         if ($tmpFile !== false) {
-            $fp = fopen($tmpFile, 'w');
+            $fp = fopen($tmpFile, 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
             if ($fp) {
-                fwrite($fp, $attachment['data']);
-                fclose($fp);
+                fwrite($fp, $attachment['data']); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+                fclose($fp); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
                 DebugEcho("media_handle_upload: wrote data to '$tmpFile'");
             } else {
                 EchoError("media_handle_upload: Could not write to temp file: '$tmpFile' ");
@@ -1541,8 +1546,14 @@ class PostieMessage {
                 $tmpSubject = trim($tmpSubject_matches[1]);
             }
             DebugEcho("get_parent_postid: tmpSubject: $tmpSubject");
-            $checkExistingPostQuery = "SELECT ID FROM $wpdb->posts WHERE post_title LIKE %s AND post_status = 'publish' AND comment_status = 'open' AND post_type=%s ORDER BY post_date DESC";
-            $id = $wpdb->get_var($wpdb->prepare($checkExistingPostQuery, $tmpSubject, $this->config->post_type));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            $id = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT ID FROM $wpdb->posts WHERE post_title LIKE %s AND post_status = 'publish' AND comment_status = 'open' AND post_type=%s ORDER BY post_date DESC",
+                    $tmpSubject,
+                    $this->config->post_type
+                )
+            );
             if (empty($id)) {
                 DebugEcho("get_parent_postid: No parent id found");
             } else {

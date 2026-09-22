@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 $google_reader = '<embed type="application/x-shockwave-flash" ' .
         'src="http://www.google.com/reader/ui/3247397568-audio-player.swf?audioUrl={FILELINK}" ' .

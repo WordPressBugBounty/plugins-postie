@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * Provides low-level debugging, error and exception functionality

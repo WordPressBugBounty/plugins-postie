@@ -60,7 +60,7 @@ class PostieAdmin {
 
         $html .= "</th><td><select name='$id' id='$id'>";
         foreach ($options as $value) {
-            $html .= "<option value='$value' " . ($value == $current_value ? "selected='selected'" : "") . ">" . __($value, 'postie') . '</option>';
+            $html .= "<option value='" . esc_attr($value) . "' " . ($value == $current_value ? "selected='selected'" : "") . ">" . esc_html($value) . '</option>';
         }
         $html .= '</select>';
         if (!empty($recommendation)) {
@@ -78,7 +78,7 @@ class PostieAdmin {
 
         $html .= "<td><select name='$id' id='$id'>\n";
         foreach ($options as $key => $value) {
-            $html .= "<option value='$key' " . ($key == $current_value ? "selected='selected'" : "") . ">" . __($value, 'postie') . "</option>\n";
+            $html .= "<option value='" . esc_attr($key) . "' " . ($key == $current_value ? "selected='selected'" : "") . ">" . esc_html($value) . "</option>\n";
         }
         $html .= '</select>';
         if (!empty($recommendation)) {

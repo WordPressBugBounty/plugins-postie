@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php");
 ?>
 <div class="wrap"> 
@@ -6,14 +9,18 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
         <a style='text-decoration:none' href='admin.php?page=postie-settings'>
             <?php
             echo '<img src="' . esc_url(plugins_url('images/mail.png', __FILE__)) . '" alt="postie" />';
-            _e('Postie Settings', 'postie');
+            esc_html_e('Postie Settings', 'postie');
             ?>
         </a>
-        <span class="description">(v<?php _e(POSTIE_VERSION, 'postie'); ?>)</span>
+        <span class="description">(v<?php echo esc_html(POSTIE_VERSION); ?>)</span>
     </h2>
 
     <?php
     if (isset($_POST['action'])) {
+        $postie_nonce = isset($_POST['postie_action_nonce']) ? sanitize_key(wp_unslash($_POST['postie_action_nonce'])) : '';
+        if (empty($postie_nonce) || !wp_verify_nonce($postie_nonce, 'postie_action_nonce_action')) {
+            wp_die(esc_html__('Security check failed. Please refresh the page and try again.', 'postie'));
+        }
         switch ($_POST['action']) {
             case 'reset':
                 $pconfig = new PostieConfig();
@@ -79,8 +86,8 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
     $messages[1] = __("Configuration successfully updated!", 'postie');
     $messages[2] = __("Error - unable to save configuration", 'postie');
     ?>
-    <?php if (isset($_GET['message'])) : ?>
-        <div class="updated"><p><?php _e($messages[$_GET['message']], 'postie'); ?></p></div>
+    <?php if (isset($_GET['message']) && array_key_exists((int)$_GET['message'], $messages)) : ?>
+        <div class="updated"><p><?php echo esc_html($messages[(int)$_GET['message']]); ?></p></div>
     <?php endif; ?>
 
     <div id="poststuff">
@@ -98,13 +105,13 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
                             <input type="hidden" name="action" value="config" />
                             <div id="simpleTabs">
                                 <h2 class="nav-tab-wrapper">
-                                    <a href="#" id="simpleTabs-nav-1" data-tab="1" class="nav-tab nav-tab-active"><?php _e('Mailserver', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-2" data-tab="2" class="nav-tab"><?php _e('User', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-3" data-tab="3" class="nav-tab"><?php _e('Message', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-4" data-tab="4" class="nav-tab"><?php _e('Image', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-5" data-tab="5" class="nav-tab"><?php _e('Video and Audio', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-6" data-tab="6" class="nav-tab"><?php _e('Attachments', 'postie') ?></a>
-                                    <a href="#" id="simpleTabs-nav-7" data-tab="7" class="nav-tab"><?php _e('Support', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-1" data-tab="1" class="nav-tab nav-tab-active"><?php esc_html_e('Mailserver', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-2" data-tab="2" class="nav-tab"><?php esc_html_e('User', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-3" data-tab="3" class="nav-tab"><?php esc_html_e('Message', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-4" data-tab="4" class="nav-tab"><?php esc_html_e('Image', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-5" data-tab="5" class="nav-tab"><?php esc_html_e('Video and Audio', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-6" data-tab="6" class="nav-tab"><?php esc_html_e('Attachments', 'postie') ?></a>
+                                    <a href="#" id="simpleTabs-nav-7" data-tab="7" class="nav-tab"><?php esc_html_e('Support', 'postie') ?></a>
                                 </h2>
 
                                 <?php include 'config_form_server.php'; ?>
@@ -125,7 +132,7 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
                             <p class="submit" style="clear: both;">
                                 <input type="hidden" name="action" value="update" />
                                 <input type="hidden" name="page_options" value="postie-settings" />
-                                <input type="submit" name="Submit" value="<?php _e('Save Changes') ?>" class="button button-primary" />
+                                <input type="submit" name="Submit" value="<?php esc_attr_e('Save Changes', 'postie') ?>" class="button button-primary" />
                             </p>
                         </form> 
                     </div>
@@ -140,22 +147,25 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
                         <h3 class="hndle ui-sortable-handle"><span>Actions</span></h3>
                         <div class="inside">
                             <div class="submitbox">
-                                <p><?php _e("To run the check mail script manually", 'postie'); ?></p>
+                                <p><?php esc_html_e( 'To run the check mail script manually', 'postie' ); ?></p>
                                 <form name="postie-options" method='post'> 
+                                    <?php wp_nonce_field('postie_action_nonce_action', 'postie_action_nonce'); ?>
                                     <input type="hidden" name="action" value="runpostie" />
-                                    <input name="Submit" value="<?php _e("Process Email", 'postie'); ?>" type="submit" class='button'>
+                                    <input name="Submit" value="<?php esc_attr_e( 'Process Email', 'postie' ); ?>" type="submit" class='button'>
                                 </form>
 
-                                <p><?php _e("To run the check mail script manually with full debug output", 'postie'); ?></p>
+                                <p><?php esc_html_e( 'To run the check mail script manually with full debug output', 'postie' ); ?></p>
                                 <form name="postie-options" method='post'> 
+                                    <?php wp_nonce_field('postie_action_nonce_action', 'postie_action_nonce'); ?>
                                     <input type="hidden" name="action" value="runpostie-debug" />
-                                    <input name="Submit" value="<?php _e("Debug", 'postie'); ?>" type="submit" class='button'>
+                                    <input name="Submit" value="<?php esc_attr_e( 'Debug', 'postie' ); ?>" type="submit" class='button'>
                                 </form>
 
-                                <p><?php _e("Test your configuration (save first)", 'postie'); ?></p>
+                                <p><?php esc_html_e( 'Test your configuration (save first)', 'postie' ); ?></p>
                                 <form name="postie-options" method="post">
+                                    <?php wp_nonce_field('postie_action_nonce_action', 'postie_action_nonce'); ?>
                                     <input type="hidden" name="action" value="test" />
-                                    <input name="Submit" value="<?php _e("Test Config", 'postie'); ?>" type="submit" class='button'>
+                                    <input name="Submit" value="<?php esc_attr_e( 'Test Config', 'postie' ); ?>" type="submit" class='button'>
                                 </form>
                             </div>
                         </div>
@@ -180,8 +190,8 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-admin.class.php")
                         <h3 class="hndle ui-sortable-handle"><span>Donations</span></h3>
 
                         <div class="inside">
-                            <p style="font-weight: bolder; margin-top: 0px; margin-bottom: 2px;"><?php _e("Please Donate, Every $ Helps!", 'postie'); ?></p>
-                            <p style="margin-top: 0;margin-bottom: 2px;"><?php _e("Your generous donation allows me to continue developing Postie for the WordPress community.", 'postie'); ?></p>
+                            <p style="font-weight: bolder; margin-top: 0px; margin-bottom: 2px;"><?php esc_html_e( 'Please Donate, Every $ Helps!', 'postie' ); ?></p>
+                            <p style="margin-top: 0;margin-bottom: 2px;"><?php esc_html_e( 'Your generous donation allows me to continue developing Postie for the WordPress community.', 'postie' ); ?></p>
                             <form style="" action="https://www.paypal.com/cgi-bin/webscr" method="post">
                                 <input type="hidden" name="cmd" value="_s-xclick">
                                 <input type="hidden" name="hosted_button_id" value="HPK99BJ88V4C2">
@@ -244,7 +254,7 @@ $iconDir = esc_url(plugins_url() . '/postie/icons');
         var iconSet = document.getElementById('postie-settings-icon_set');
         var iconSize = document.getElementById('postie-settings-icon_size');
         var preview = document.getElementById('postie-settings-attachment_preview');
-        var iconDir = '<?php echo $iconDir ?>/';
+        var iconDir = '<?php echo esc_url($iconDir) ?>/';
         if (size == true) {
             var hiddenInput = iconSize
         } else {
@@ -282,11 +292,11 @@ $iconDir = esc_url(plugins_url() . '/postie/icons');
         }
         hiddenStyle.value = selectedStyle.innerHTML
         var previewHTML = selectedStyle.value;
-        var fileLink = '<?php echo $templateDir ?>/' + sample;
-        var thumb = '<?php echo $templateDir ?>/' + sample.replace(/\.jpg/, '-150x150.jpg');
-        var medium = '<?php echo $templateDir ?>/' + sample.replace(/\.jpg/, '-300x200.jpg');
-        var large = '<?php echo $templateDir ?>/' + sample.replace(/\.jpg/, '-1024x682.jpg');
-        var pagelink = '<?php echo get_option("siteurl") ?>' + '/?attachment_id=9999';
+        var fileLink = '<?php echo esc_url($templateDir) ?>/' + sample;
+        var thumb = '<?php echo esc_url($templateDir) ?>/' + sample.replace(/\.jpg/, '-150x150.jpg');
+        var medium = '<?php echo esc_url($templateDir) ?>/' + sample.replace(/\.jpg/, '-300x200.jpg');
+        var large = '<?php echo esc_url($templateDir) ?>/' + sample.replace(/\.jpg/, '-1024x682.jpg');
+        var pagelink = '<?php echo esc_url(get_option("siteurl")) ?>' + '/?attachment_id=9999';
         var fileType = 'mp4';
         previewHTML = previewHTML.replace(/{FILELINK}/g, fileLink);
         previewHTML = previewHTML.replace(/{FULL}/g, fileLink);

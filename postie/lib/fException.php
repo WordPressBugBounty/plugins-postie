@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * An exception that allows for easy l10n, printing, tracing and hooking

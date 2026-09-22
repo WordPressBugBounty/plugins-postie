@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * Allows creating and sending a single email containing plaintext, HTML, attachments and S/MIME encryption

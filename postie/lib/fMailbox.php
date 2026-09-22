@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * Note this class has been modified to add the following methods:
@@ -220,7 +221,7 @@ class fMailbox {
         if ($structure['encoding'] == 'base64') {
             //DebugEcho('handlePart: base64');
             $content = '';
-            foreach (explode("\r\n", $data) as $line) {
+            foreach (preg_split("#\r?\n#", $data) as $line) {
                 $content .= base64_decode($line);
             }
         } elseif ($structure['encoding'] == 'quoted-printable') {
@@ -564,7 +565,7 @@ class fMailbox {
         if (!strlen($headers)) {
             return array();
         }
-        $header_lines = preg_split("#\r\n(?!\s)#", $headers);
+        $header_lines = preg_split("#\r?\n(?!\s)#", $headers);
 
         $single_email_fields = array('from', 'sender', 'reply-to', 'bcc');
         $multi_email_fields = array('to', 'cc');
@@ -573,7 +574,7 @@ class fMailbox {
         $headers = array();
         foreach ($header_lines as $header_line) {
             //DebugEcho("headerline: $header_line");
-            $header_line = preg_replace("#\r\n\s+#", ' ', $header_line);
+            $header_line = preg_replace("#\r?\n\s+#", ' ', $header_line);
 
             if (false !== strpos($header_line, ':')) {
                 list ($header, $value) = preg_split('#:\s*#', $header_line, 2);
@@ -679,7 +680,7 @@ class fMailbox {
      */
     static public function parseMessage($message, $convert_newlines = FALSE) {
         $info = array();
-        list ($headers, $body) = explode("\r\n\r\n", $message, 2);
+        list ($headers, $body) = preg_split("#\r?\n\r?\n#", $message, 2);
         $parsed_headers = self::parseHeaders($headers);
         $info['received'] = self::cleanDate(preg_replace('#^.*;\s*([^;]+)$#', '\1', $parsed_headers['received'][0]));
         $info['headers'] = array();
@@ -776,7 +777,7 @@ class fMailbox {
      */
     static private function parseStructure($data, $headers = NULL) {
         if (!$headers) {
-            list ($headers, $data) = preg_split("#^\r\n|\r\n\r\n#", $data, 2);
+            list ($headers, $data) = preg_split("#^(?:\r?\n){1,2}|\r?\n\r?\n#", $data, 2);
             $headers = self::parseHeaders($headers);
         }
 
@@ -800,9 +801,11 @@ class fMailbox {
             );
             //Some email clients use boundary vs Boundary and PHP's array access is case sensitive so we have to check both
             $boundary = isset($headers['content-type']['fields']['boundary']) ? $headers['content-type']['fields']['boundary'] : $headers['content-type']['fields']['Boundary'];
-            $start_pos = strpos($data, '--' . $boundary) + strlen($boundary) + 4;
-            $end_pos = strrpos($data, '--' . $boundary . '--') - 2;
-            $sub_contents = explode("\r\n--" . $boundary . "\r\n", substr($data, $start_pos, $end_pos - $start_pos));
+            $parts_data = preg_split("#\r?\n--" . preg_quote($boundary, '#') . "--#", $data, 2);
+            $parts_body = $parts_data[0];
+            $sub_contents = preg_split("#(?:\r?\n|^)--" . preg_quote($boundary, '#') . "\r?\n#", $parts_body);
+            // Discard preamble
+            array_shift($sub_contents);
             foreach ($sub_contents as $sub_content) {
                 $structure['parts'][] = self::parseStructure($sub_content);
             }

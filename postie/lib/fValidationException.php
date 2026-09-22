@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * An exception caused by a data not matching a rule or set of rules

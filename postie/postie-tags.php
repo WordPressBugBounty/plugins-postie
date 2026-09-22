@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 function postie_is_html($str, $config = null) {
     if (empty($config)) {
@@ -37,9 +40,8 @@ function postie_content_lines($content, $config = null) {
 }
 
 function postie_lookup_taxonomy_name($termid) {
-    global $wpdb;
-    $tax_sql = 'SELECT taxonomy FROM ' . $wpdb->term_taxonomy . ' WHERE term_id = ' . $termid;
-    $tax = $wpdb->get_var($tax_sql);
+    $term = get_term($termid);
+    $tax = !is_wp_error($term) && !empty($term) ? $term->taxonomy : '';
     DebugEcho("lookup_taxonomy: $termid is in taxonomy $tax");
     return $tax;
 }
@@ -83,8 +85,15 @@ function postie_lookup_category_id($trial_category, $category_match = true) {
     $found_category = NULL;
     if ($category_match) {
         DebugEcho("category wildcard lookup: $trial_category");
-        $sql_sub_name = 'SELECT term_id FROM ' . $wpdb->terms . ' WHERE name LIKE \'' . addslashes(esc_attr($trial_category)) . '%\' OR slug LIKE \'' . addslashes(esc_attr($trial_category)) . '%\' limit 1';
-        $found_category = $wpdb->get_var($sql_sub_name);
+        $like_term = $trial_category . '%';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $found_category = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT term_id FROM $wpdb->terms WHERE name LIKE %s OR slug LIKE %s LIMIT 1",
+                $like_term,
+                $like_term
+            )
+        );
         DebugEcho("lookup_category: wildcard found: $found_category");
     } else {
         DebugEcho("lookup_category: wildcard not found: $found_category");
@@ -464,14 +473,15 @@ function tag_Date(&$content, $message_date, $config) {
                 DebugEcho("tag_Date: found date tag $matches[1]");
                 $newdate = strtotime($possibledate);
                 if (false !== $newdate) {
-                    $t = date('H:i:s', $newdate);
+                    $t = gmdate('H:i:s', $newdate);
                     DebugEcho("tag_Date: original time: $t");
 
                     $format = 'Y-m-d';
                     if ($t != '00:00:00') {
                         $format .= ' H:i:s';
                     }
-                    $message_date = date($format, $newdate);
+                    $date = gmdate($format, $newdate);
+                    $message_date = $date;
                     $content = str_replace($matches[0], '', $content);
                     break;
                 } else {

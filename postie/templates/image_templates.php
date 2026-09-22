@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 $simple_link = '<a href="{FILELINK}">{FILENAME}</a>';
 $robert_felty = '<div style="margin-right:10px;background:black;color:white;padding:2px; width:{MEDIUMWIDTH};float:left"><a href="{IMAGE}"><img src="{MEDIUM}" alt="{CAPTION}" title="{CAPTION}" class="attachment" /></a><div style="padding:.2em;text-align:left">{CAPTION}</div></div>';

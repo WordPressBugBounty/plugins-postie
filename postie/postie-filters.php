@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib/autolink.php");
 
@@ -453,6 +456,7 @@ function filter_ReplaceImageCIDs($content, &$email) {
                 } else {
                     DebugEcho("filter_ReplaceImageCIDs: skipping {$attachment['filename']}");
                 }
+                // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
                 $attachment['exclude'] = true;
             } else {
                 DebugEcho("filter_ReplaceImageCIDs: CID not found: $cid");
@@ -484,6 +488,7 @@ function filter_ReplaceInlineImage($content, &$email, $config) {
         if (false !== stripos($content, $inlinemarker)) {
             DebugEcho('filter_ReplaceInlineImage: ' . $inlineImage['filename']);
             $content = str_ireplace($inlinemarker, $template, $content);
+            // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
             $inlineImage['exclude'] = !empty($template); //don't exclude if we didn't add
         } else {
             DebugEcho('filter_ReplaceInlineImage: not found: ' . $inlineImage['filename']);
@@ -558,6 +563,7 @@ function filter_ReplaceImagePlaceHolders_worker($content, &$attachment, $imagePa
             DebugEcho('filter_ReplaceImagePlaceHolders_worker: processing:');
             DebugDump($match);
 
+            // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude
             $attachment['exclude'] = true;
             $imageTemplate = $attachment['template'];
 

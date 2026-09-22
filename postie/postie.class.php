@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib/fException.php");
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib/fUnexpectedException.php");
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib/fExpectedException.php");
@@ -43,15 +46,7 @@ class Postie {
 
     function get_mail() {
         $config = postie_config_read();
-        if (true == $config->postie_log_error || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
-            add_action('postie_log_error', array($this, 'log_error'));
-        }
-        if (true == $config->postie_log_debug && !defined('POSTIE_DEBUG')) {
-            define('POSTIE_DEBUG', true);
-        }
-        if (true == $config->postie_log_debug || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
-            add_action('postie_log_debug', array($this, 'log_debug'));
-        }
+        $this->setup_logging($config);
         if (true == $config->duplicate_comments) {
             DebugEcho("enabling duplicate comments");
             add_filter('duplicate_comment_id', array($this, 'return_false'));
@@ -131,7 +126,7 @@ class Postie {
     }
 
     function save_email_debug($raw, $email) {
-        if ($this->is_debugmode()) {
+        if (self::is_debugmode()) {
             //DebugDump($email);
             //DebugDump($mimeDecodedEmail);
 
@@ -193,6 +188,7 @@ class Postie {
             $mailbox = $this->get_mailbox($server, $port, $email, $password, $protocol, $config);
             $messages = $mailbox->listMessages($maxemails);
 
+            /* translators: %d: number of messages */
             DebugEcho(sprintf(__("fetch_mail: There are %d messages to process", 'postie'), count($messages)));
 
             DebugDump($messages);
@@ -365,6 +361,7 @@ class Postie {
         require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
         require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';
         require_once ABSPATH . WPINC . '/class-wp-image-editor-imagick.php';
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $implementations = apply_filters('wp_image_editors', array('WP_Image_Editor_Imagick', 'WP_Image_Editor_GD'));
         foreach ($implementations as $implementation) {
             if (!call_user_func(array($implementation, 'test'))) {
@@ -392,6 +389,7 @@ class Postie {
         $this->show_filters_for('wp_handle_sideload_prefilter');
         $this->show_filters_for('pre_move_uploaded_file');
 
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         DebugEcho("image memory limit: " . apply_filters('image_memory_limit', WP_MAX_MEMORY_LIMIT), $force_display);
 
         DebugEcho("DISABLE_WP_CRON: " . (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON === true ? 'On' : 'Off'), $force_display);
@@ -417,7 +415,7 @@ class Postie {
 
         DebugEcho("Postie is in " . plugin_dir_path(__FILE__), $force_display);
         DebugEcho("Postie Version: " . POSTIE_VERSION, $force_display);
-        DebugEcho("POSTIE_DEBUG: " . ($this->is_debugmode() ? 'On' : 'Off'), $force_display);
+        DebugEcho("POSTIE_DEBUG: " . (self::is_debugmode() ? 'On' : 'Off'), $force_display);
 
         $this->show_filters_for('postie_filter_email');
         $this->show_filters_for('postie_filter_email2');
@@ -451,24 +449,38 @@ class Postie {
         $this->show_filters_for('postie_include_attachment');
     }
 
-    function is_debugmode() {
-        return (defined('POSTIE_DEBUG') && POSTIE_DEBUG == true);
+    public static function is_debugmode() {
+        return defined('POSTIE_DEBUG') && POSTIE_DEBUG;
+    }
+
+    function setup_logging($config) {
+        if ($config->postie_log_error || self::is_debugmode()) {
+            add_action('postie_log_error', array($this, 'log_error'));
+        }
+        if ($config->postie_log_debug && !self::is_debugmode()) {
+            define('POSTIE_DEBUG', true);
+        }
+        if ($config->postie_log_debug || self::is_debugmode()) {
+            add_action('postie_log_debug', array($this, 'log_debug'));
+        }
     }
 
     function log_onscreen($data) {
         if (php_sapi_name() == 'cli') {
-            print("$data\n");
+            echo esc_html($data) . "\n";
         } else {
-            print("<pre>" . htmlspecialchars($data) . "</pre>\n");
+            echo "<pre>" . esc_html($data) . "</pre>\n";
         }
     }
 
     function log_error($v) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log("Postie [error]: $v");
         $this->log_onscreen($v);
     }
 
     function log_debug($data) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log("Postie [debug]: $data");
     }
 
@@ -498,15 +510,7 @@ class Postie {
         }
 
         $config = postie_config_read();
-        if (true == $config->postie_log_error || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
-            add_action('postie_log_error', array($this, 'log_error'));
-        }
-        if (true == $config->postie_log_debug && !defined('POSTIE_DEBUG')) {
-            define('POSTIE_DEBUG', true);
-        }
-        if (true == $config->postie_log_debug || (defined('POSTIE_DEBUG') && true == POSTIE_DEBUG)) {
-            add_action('postie_log_debug', array($this, 'log_debug'));
-        }
+        $this->setup_logging($config);
         ?>
         <div class="wrap"> 
             <h1>Postie Configuration Test</h1>
@@ -525,7 +529,7 @@ class Postie {
             DebugEcho("Postie time correction: {$config->time_offset}", true);
             $offsetdate = strtotime(current_time('mysql')) + ($config->use_time_offset ? $config->time_offset * 3600 : 0);
 
-            DebugEcho("Post time: " . date('Y-m-d H:i:s', $offsetdate), true);
+            DebugEcho("Post time: " . gmdate('Y-m-d H:i:s', $offsetdate), true);
             ?>
             <h2>Encoding</h2>
             <?php
@@ -544,7 +548,7 @@ class Postie {
             }
 
             $conninfo = $this->connection_info($config);
-            if ($this->is_debugmode()) {
+            if (self::is_debugmode()) {
                 fCore::enableDebugging(true);
                 fCore::registerDebugCallback('DebugEcho');
             }

@@ -62,8 +62,9 @@ class pPop3MailServer extends pMailServer {
         $response = $this->connection->write('LIST');
         array_shift($response);
         foreach ($response as $line) {
-            preg_match('#^(\d+)\s+(\d+)$#', $line, $match);
-            $sizes[$match[1]] = $match[2];
+            if (preg_match('#^(\d+)\s+(\d+)$#', $line, $match)) {
+                $sizes[$match[1]] = $match[2];
+            }
         }
 
         $output = array();

@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 /* this function is necessary for wildcard matching on non-posix systems */
 if (!function_exists('fnmatch')) {
@@ -10,9 +13,11 @@ if (!function_exists('fnmatch')) {
 
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 if (!function_exists('mb_str_replace')) {
     if (function_exists('mb_split')) {
 
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
         function mb_str_replace($search, $replace, $subject, &$count = 0) {
             if (!is_array($subject)) {
                 // Normalize $search and $replace so they are both arrays of the same length
@@ -36,6 +41,7 @@ if (!function_exists('mb_str_replace')) {
 
     } else {
 
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
         function mb_str_replace($search, $replace, $subject, &$count = null) {
             return str_replace($search, $replace, $subject, $count);
         }

@@ -61,7 +61,7 @@ Tests are located in the `test/` directory. The presence of `wpstub.php` indicat
 
 ### Conventions
 *   **Coding Style:** Follows general WordPress Coding Standards.
-*   **PHP Version Compatibility:** The plugin must strictly maintain compatibility with **PHP 7.0**. Therefore, only PHP 7.0 compatible syntax is permitted in the codebase.
+*   **PHP Version Compatibility:** `phpcs` should be used to strictly maintain compatibility with **PHP 7.0**. Therefore, only PHP 7.0 compatible syntax is permitted in the codebase.
     *   **NO** typed class properties (e.g., `public string $prop` - PHP 7.4+).
     *   **NO** nullable typed properties (e.g., `public ?string $prop` - PHP 7.4+).
     *   **NO** `: void` return type declarations (PHP 7.1+).

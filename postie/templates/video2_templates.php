@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 $small = '<object ' .
         'classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" ' .

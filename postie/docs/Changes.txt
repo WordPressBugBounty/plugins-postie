@@ -9,9 +9,7 @@ postie_filter_email3 and postie_post_before filters.
 See http://flourishlib.com/docs/fMailbox
 
 = 1.6.0 =
-Remote cron jobs need to update the URL used to kick off a manual email check. The new URL is http://<mysite>/?postie=get-mail
-Accessing http://<mysite>/wp-content/plugins/postie/get_mail.php will now receive a 403 error and a message stating what the new URL should be.
-The Postie menu is now at the main level rather than a Settings submenu.
+Remote cron jobs must update the URL to: http://<mysite>/?postie=get-mail. Accessing old get_mail.php will receive a 403 error and instruction. The Postie menu is now at the main level rather than a Settings submenu.
 
 = 1.5.14 =
 The postie_post filter has be deprecated in favor of postie_post_before.
@@ -35,6 +33,12 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.82 (2026-09-21) =
+* Fix issue with unix line endings in headers
+
+= 1.9.81 (2026-08-13) =
+* Prep for Wordpress 7.1
+
 = 1.9.80 (2026-07-27) =
 * Automatically self-heal/reschedule missing cron tasks on 'init' hook
 
