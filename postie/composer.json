@@ -10,24 +10,12 @@
     "require": {
         "voku/simple_html_dom": "^4.8.10"
     },
-    "require-dev": {
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-        "phpcompatibility/php-compatibility": "^9.3",
-        "phpunit/phpunit": "10.5.*",
-        "squizlabs/php_codesniffer": "^3.10",
-        "wp-coding-standards/wpcs": "^3.4"
-    },
-    "config": {
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
-    },
     "scripts": {
-        "phpcs": "vendor/bin/phpcs -p . --standard=WordPress --ignore=vendor/,test/",
-        "phpcompat": "vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/",
+        "phpcs": "tools/vendor/bin/phpcs -p . --standard=WordPress --ignore=vendor/,test/,tools/",
+        "phpcompat": "tools/vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/,tools/",
         "test": [
             "@phpcompat",
-            "vendor/bin/phpunit"
+            "tools/vendor/bin/phpunit"
         ]
     }
 }

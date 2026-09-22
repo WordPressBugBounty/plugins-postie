@@ -127,7 +127,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
         DebugEcho("filter_AttachmentTemplates: remove featured image from post");
         $html = \voku\helper\HtmlDomParser::str_get_html($content);
         if ($html) {
-            $elements = $html->find('img[src=' . wp_get_attachment_url($featuredimageid) . ']');
+            $elements = $html->find("//img[@src='" . wp_get_attachment_url($featuredimageid) . "']");
             foreach ($elements as $e) {
                 DebugEcho('filter_AttachmentTemplates: outertext:' . $e->outertext);
                 $e->outertext = '';
@@ -189,7 +189,7 @@ function filter_CleanHtml($content) {
         DebugEcho("filter_CleanHtml: checking filter postie_cleanhtml");
         if (apply_filters('postie_cleanhtml', true)) {
             DebugEcho("filter_CleanHtml: Looking for invalid tags");
-            foreach ($html->find('script, style, head') as $node) {
+            foreach ($html->find('//script | //style | //head') as $node) {
                 try {
                     $domNode = $node->getNode();
                     if ($domNode && $domNode->ownerDocument && $domNode->parentNode) {
@@ -206,7 +206,7 @@ function filter_CleanHtml($content) {
 
             $html->load($html->save());
 
-            $b = $html->find('body');
+            $b = $html->find('//body');
             if (count($b) > 0 && stripos($content, '<body') !== false) {
                 DebugEcho("filter_CleanHtml: replacing body with div");
                 $content = "<div>" . $b[0]->innertext . "</div>\n";
@@ -453,7 +453,7 @@ function filter_Linkify($text) {
     if (postie_is_html($text)) {
         $html = $g_postie->load_html($text);
         if ($html !== false) {
-            $es = $html->find('body');
+            $es = $html->find('//body');
             if (count($es) > 0 && stripos($text, '<body') !== false) {
                 DebugEcho("filter_linkify: found body");
                 $frag = $al->autolink($es[0]->innertext, $oe);

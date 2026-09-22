@@ -33,6 +33,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.86 (2026-09-22) =
+* remove Symfony CssSelector dependency
+
 = 1.9.85 (2026-09-22) =
 * Fix settings page issue
 

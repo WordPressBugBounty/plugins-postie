@@ -30,6 +30,10 @@
 
 Since this is a WordPress plugin, "building" typically involves ensuring the directory is placed within the `wp-content/plugins/` directory of a WordPress installation.
 
+### Production Dependencies & Version Control
+Because Postie is distributed as a standard WordPress plugin, end-users install it by downloading and extracting the packaged zip file; Composer is never run on the user's WordPress server. Therefore, **all production dependencies inside the root `vendor/` directory (e.g., `voku/simple_html_dom`) must be tracked under version control so they are delivered with the plugin.**
+*(Note: Only dynamic platform-specific wrappers like `vendor/bin/` are excluded from version control.)*
+
 ### Installation
 1.  Copy the `postie` directory to `wp-content/plugins/`.
 2.  Activate the plugin via the WordPress Admin interface.
@@ -45,18 +49,24 @@ Since this is a WordPress plugin, "building" typically involves ensuring the dir
 ### Testing and Linting
 Tests are located in the `test/` directory. The presence of `wpstub.php` indicates that tests are designed to run in isolation by mocking WordPress core functions, rather than requiring a full WordPress environment.
 
+To keep the root `vendor/` directory production-only and lightweight, all development and testing dependencies (PHPUnit, PHP_CodeSniffer, etc.) are isolated inside a dedicated **`tools/`** directory.
+
 *   **Framework:** PHPUnit (standard for WP plugins), utilizing `test/bootstrap.php` for isolated environment mocking.
-*   **Running Tests & Enforcing Linter:** To guarantee PHP 7.0 compatibility, the compatibility linter **must** be run every time tests are executed. A Composer command is available that chains the two checks together, running the linter first, followed by PHPUnit:
+*   **Installing Dev Tools:** To install or update dev tools, run:
+    ```bash
+    cd tools && composer install
+    ```
+*   **Running Tests & Enforcing Linter:** To guarantee PHP 7.0 compatibility, the compatibility linter **must** be run every time tests are executed. A Composer command is configured to chain the check and the tests together from the root directory:
     ```bash
     composer test
     ```
 *   **Running Tests Separately:** To run only the PHPUnit suite:
     ```bash
-    vendor/bin/phpunit
+    tools/vendor/bin/phpunit
     ```
 *   **Running Linter Separately:** To run only the PHP 7.0 compatibility scanner:
     ```bash
-    vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/
+    tools/vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/,tools/
     ```
 
 ### Conventions
