@@ -24,10 +24,10 @@ if ( ! defined( 'ABSPATH' ) ) {
             <th scope="row"><lable for="postie-settings-input_protocol"><?php esc_html_e('Mail Protocol', 'postie') ?></lable></th>
         <td>
             <select name='postie-settings[input_protocol]' id='postie-settings-input_protocol'>
-                <option value="pop3"  <?php echo (($input_connection == "pop3") ? " selected='selected' " : "") ?>>POP3</option>
-                <option value="imap" <?php echo ($input_connection == "imap") ? "selected='selected' " : "" ?>>IMAP</option>
-                <option value="pop3-ssl" <?php echo ($input_connection == "pop3-ssl") ? "selected='selected' " : "" ?>>POP3-SSL</option>
-                <option value="imap-ssl" <?php echo ($input_connection == "imap-ssl") ? "selected='selected' " : "" ?>>IMAP-SSL</option>
+                <option value="pop3"  <?php echo (($input_protocol == "pop3") ? " selected='selected' " : "") ?>>POP3</option>
+                <option value="imap" <?php echo ($input_protocol == "imap") ? "selected='selected' " : "" ?>>IMAP</option>
+                <option value="pop3-ssl" <?php echo ($input_protocol == "pop3-ssl") ? "selected='selected' " : "" ?>>POP3-SSL</option>
+                <option value="imap-ssl" <?php echo ($input_protocol == "imap-ssl") ? "selected='selected' " : "" ?>>IMAP-SSL</option>
             </select>
             <p class='description'><?php
                 if (!extension_loaded('openssl')) {

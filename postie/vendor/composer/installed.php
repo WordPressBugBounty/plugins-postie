@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'postie/postie',
+        'pretty_version' => 'trunk',
+        'version' => 'dev-trunk',
+        'reference' => null,
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => false,
+    ),
+    'versions' => array(
+        'postie/postie' => array(
+            'pretty_version' => 'trunk',
+            'version' => 'dev-trunk',
+            'reference' => null,
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'symfony/css-selector' => array(
+            'pretty_version' => 'v7.4.18',
+            'version' => '7.4.18.0',
+            'reference' => 'fecf40067fc8d8880ea87b8ac227600b9aadd1d0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/css-selector',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'voku/simple_html_dom' => array(
+            'pretty_version' => '4.8.10',
+            'version' => '4.8.10.0',
+            'reference' => '716822ed52ed3a1881542be07a786270de390e99',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../voku/simple_html_dom',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);

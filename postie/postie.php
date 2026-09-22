@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.83
+  Version: 1.9.85
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3706581 2026-09-22 03:59:26Z WayneAllen $
+  $Id: postie.php 3707677 2026-09-22 15:34:46Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
