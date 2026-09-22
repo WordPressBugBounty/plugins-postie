@@ -7,6 +7,9 @@
             "email": "wayne@postieplugin.com"
         }
     ],
+    "require": {
+        "voku/simple_html_dom": "^4.8.10"
+    },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "phpcompatibility/php-compatibility": "^9.3",

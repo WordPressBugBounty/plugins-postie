@@ -56,3 +56,25 @@ if (!function_exists('boolval')) {
     }
 
 }
+
+if (!defined('DEFAULT_TARGET_CHARSET')) {
+    define('DEFAULT_TARGET_CHARSET', 'UTF-8');
+}
+if (!defined('DEFAULT_BR_TEXT')) {
+    define('DEFAULT_BR_TEXT', "\r\n");
+}
+if (!defined('DEFAULT_SPAN_TEXT')) {
+    define('DEFAULT_SPAN_TEXT', " ");
+}
+
+if (!function_exists('str_get_html')) {
+    function str_get_html($str, $lowercase = true, $forceTagsClosed = true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN = true, $defaultBRText = DEFAULT_BR_TEXT, $defaultSpanText = DEFAULT_SPAN_TEXT) {
+        return \voku\helper\HtmlDomParser::str_get_html($str, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
+    }
+}
+
+if (!function_exists('file_get_html')) {
+    function file_get_html($url, $use_include_path = false, $context = null, $offset = -1, $maxLen = -1, $lowercase = true, $forceTagsClosed = true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN = true, $defaultBRText = DEFAULT_BR_TEXT, $defaultSpanText = DEFAULT_SPAN_TEXT) {
+        return \voku\helper\HtmlDomParser::file_get_html($url, $use_include_path, $context, $offset, $maxLen, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
+    }
+}

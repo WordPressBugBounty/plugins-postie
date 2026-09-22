@@ -1425,7 +1425,7 @@ class PostieMessage {
     }
 
     function load_html($text) {
-        return str_get_html($text, true, true, DEFAULT_TARGET_CHARSET, false);
+        return \voku\helper\HtmlDomParser::str_get_html($text, true, true, DEFAULT_TARGET_CHARSET, false);
     }
 
     function media_handle_upload($attachment, $post_id, $poster) {

@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 7.0
-Stable tag: 1.9.82
+Stable tag: 1.9.83
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,9 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.83 (2026-09-21) =
+* Remove simple_html_dom.php and replace with modern namespaced port - voku/simple_html_dom 
+
 = 1.9.82 (2026-09-21) =
 * Fix issue with unix line endings in headers
 

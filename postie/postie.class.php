@@ -24,20 +24,13 @@ require_once(ABSPATH . 'wp-admin/includes/image.php');
 require_once(ABSPATH . 'wp-admin/includes/media.php');
 require_once(ABSPATH . 'wp-admin/includes/file.php'); //wp_tempnam()
 
-if (!function_exists('file_get_html')) {
-    //DebugEcho('Including Postie simple_html_dom');
-    require_once (plugin_dir_path(__FILE__) . 'lib/simple_html_dom.php');
-} else {
-    //DebugEcho('non-Postie simple_html_dom already loaded');
-}
-
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-filters.php");
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-tags.php");
 
 class Postie {
 
     function load_html($text) {
-        return str_get_html($text, true, true, DEFAULT_TARGET_CHARSET, false);
+        return \voku\helper\HtmlDomParser::str_get_html($text, true, true, DEFAULT_TARGET_CHARSET, false);
     }
 
     function return_false() {

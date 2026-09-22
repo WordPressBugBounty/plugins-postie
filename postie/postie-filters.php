@@ -125,7 +125,7 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
     //strip featured image from html
     if ($featuredimageid > 0 && $config->prefer_text_type == 'html' && !$config->include_featured_image) {
         DebugEcho("filter_AttachmentTemplates: remove featured image from post");
-        $html = str_get_html($content);
+        $html = \voku\helper\HtmlDomParser::str_get_html($content);
         if ($html) {
             $elements = $html->find('img[src=' . wp_get_attachment_url($featuredimageid) . ']');
             foreach ($elements as $e) {
@@ -180,21 +180,34 @@ function filter_AttachmentTemplates($content, $mimeDecodedEmail, $post_id, $conf
 
 // This function cleans up HTML in the email
 function filter_CleanHtml($content) {
-    $html = str_get_html($content);
+    if (trim($content) === '') {
+        DebugEcho("filter_CleanHtml: Empty content, returning unmodified");
+        return $content;
+    }
+    $html = \voku\helper\HtmlDomParser::str_get_html($content);
     if ($html) {
         DebugEcho("filter_CleanHtml: checking filter postie_cleanhtml");
         if (apply_filters('postie_cleanhtml', true)) {
             DebugEcho("filter_CleanHtml: Looking for invalid tags");
             foreach ($html->find('script, style, head') as $node) {
-                DebugEcho("filter_CleanHtml: Removing: " . $node->outertext);
-                $node->outertext = '';
+                try {
+                    $domNode = $node->getNode();
+                    if ($domNode && $domNode->ownerDocument && $domNode->parentNode) {
+                        DebugEcho("filter_CleanHtml: Removing: " . $node->outertext);
+                        $node->outertext = '';
+                    }
+                } catch (\Exception $e) {
+                    // Node is already detached/deleted, skip
+                } catch (\Throwable $e) {
+                    // Catch engine errors
+                }
             }
             DebugEcho("filter_CleanHtml: " . $html->save());
 
             $html->load($html->save());
 
             $b = $html->find('body');
-            if ($b) {
+            if (count($b) > 0 && stripos($content, '<body') !== false) {
                 DebugEcho("filter_CleanHtml: replacing body with div");
                 $content = "<div>" . $b[0]->innertext . "</div>\n";
             }
@@ -256,7 +269,7 @@ function filter_RemoveSignature($content, $config) {
             DebugEcho("filter_RemoveSignature: html");
             $pattern = '/>\s*(' . implode('|', $config->sig_pattern_list) . ')/miu';
             DebugEcho("filter_RemoveSignature: pattern: $pattern");
-            filter_RemoveSignatureWorker($html->root, $pattern);
+            filter_RemoveSignatureWorker($html, $pattern);
             //DebugEcho("filter_RemoveSignature: post worker: $html");
             $content = $html->save();
         } else {
@@ -285,6 +298,9 @@ function filter_RemoveSignature($content, $config) {
 }
 
 function filter_RemoveSignatureWorker(&$html, $pattern) {
+    if (!$html || !is_object($html)) {
+        return false;
+    }
     $found = false;
     $matches = array();
     $subject = trim($html);
@@ -299,7 +315,21 @@ function filter_RemoveSignatureWorker(&$html, $pattern) {
             DebugEcho("filter_RemoveSignatureWorker: signature index: $i");
             $presig = substr($html->innertext, 0, $i);
             DebugEcho("filter_RemoveSignatureWorker sig new text:\n$presig");
-            $html->innertext = $presig;
+            try {
+                if ($html instanceof \voku\helper\HtmlDomParser) {
+                    $html->loadHtml($presig);
+                    return true;
+                } else if ($html->getNode() && $html->getNode()->parentNode instanceof \DOMDocument) {
+                    $parser = \voku\helper\HtmlDomParser::str_get_html($presig);
+                    $html = new \voku\helper\SimpleHtmlDom($parser->getDocument()->documentElement);
+                    return true;
+                } else {
+                    $html->innertext = $presig;
+                }
+            } catch (\RuntimeException $e) {
+                $parser = \voku\helper\HtmlDomParser::str_get_html($presig);
+                $html->innertext = $parser->html();
+            }
         } else {
             //DebugEcho("filter_RemoveSignatureWorker: signature not found: '$sig' " . strlen($sig));
         }
@@ -311,7 +341,19 @@ function filter_RemoveSignatureWorker(&$html, $pattern) {
         //DebugDump($matches);
     }
 
-    foreach ($html->children() as $e) {
+    $children = array();
+    if (method_exists($html, 'children') || method_exists($html, 'childNodes')) {
+        foreach ($html->children() as $e) {
+            if ($e !== null) {
+                $children[] = $e;
+            }
+        }
+    }
+
+    foreach ($children as $e) {
+        if (!$e || !is_object($e)) {
+            continue;
+        }
         //DebugEcho("sig: " . $e->plaintext);
         if (!$found && preg_match($pattern, trim($e->plaintext))) {
             DebugEcho("filter_RemoveSignatureWorker signature found: removing");
@@ -412,7 +454,7 @@ function filter_Linkify($text) {
         $html = $g_postie->load_html($text);
         if ($html !== false) {
             $es = $html->find('body');
-            if (!empty($es)) {
+            if (count($es) > 0 && stripos($text, '<body') !== false) {
                 DebugEcho("filter_linkify: found body");
                 $frag = $al->autolink($es[0]->innertext, $oe);
                 $frag = $al->autolink_email($frag);
