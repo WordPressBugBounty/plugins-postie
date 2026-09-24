@@ -33,6 +33,11 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.87 (2026-09-24) =
+* Fix autolink issue
+* minor changes to follow plugin guidelines
+* Downgrade dependencies to be PHP 7+ compatible
+
 = 1.9.86 (2026-09-22) =
 * remove Symfony CssSelector dependency
 

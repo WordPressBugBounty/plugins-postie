@@ -1,7 +1,7 @@
 AddOn Ideas
 Header/footer stripper - user provides "selector" (xpath) to identify header/footer and element is removed safely for html
     selector = "div.footer" (div with the class "footer")
-    May need to remove parent (or granparent of element)
+    May need to remove parent (or grandparent of element)
     How to help non-techies build the selector?
 Email notifications - use postie_email_* filters and some new settings panels along with some templating. User can select which post status fire the email.
 Configurable message for "post confirmation" - variable substitution, by post status

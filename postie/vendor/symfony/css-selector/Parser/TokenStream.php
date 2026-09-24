@@ -29,23 +29,41 @@ class TokenStream
     /**
      * @var Token[]
      */
-    private array $tokens = [];
+    private $tokens = array();
+
+    /**
+     * @var bool
+     */
+    private $frozen = false;
 
     /**
      * @var Token[]
      */
-    private array $used = [];
+    private $used = array();
 
-    private int $cursor = 0;
-    private ?Token $peeked;
-    private bool $peeking = false;
+    /**
+     * @var int
+     */
+    private $cursor = 0;
+
+    /**
+     * @var Token|null
+     */
+    private $peeked = null;
+
+    /**
+     * @var bool
+     */
+    private $peeking = false;
 
     /**
      * Pushes a token.
      *
+     * @param Token $token
+     *
      * @return $this
      */
-    public function push(Token $token): static
+    public function push(Token $token)
     {
         $this->tokens[] = $token;
 
@@ -57,17 +75,21 @@ class TokenStream
      *
      * @return $this
      */
-    public function freeze(): static
+    public function freeze()
     {
+        $this->frozen = true;
+
         return $this;
     }
 
     /**
      * Returns next token.
      *
+     * @return Token
+     *
      * @throws InternalErrorException If there is no more token
      */
-    public function getNext(): Token
+    public function getNext()
     {
         if ($this->peeking) {
             $this->peeking = false;
@@ -85,8 +107,10 @@ class TokenStream
 
     /**
      * Returns peeked token.
+     *
+     * @return Token
      */
-    public function getPeek(): Token
+    public function getPeek()
     {
         if (!$this->peeking) {
             $this->peeked = $this->getNext();
@@ -101,17 +125,19 @@ class TokenStream
      *
      * @return Token[]
      */
-    public function getUsed(): array
+    public function getUsed()
     {
         return $this->used;
     }
 
     /**
-     * Returns next identifier token.
+     * Returns nex identifier token.
+     *
+     * @return string The identifier token value
      *
      * @throws SyntaxErrorException If next token is not an identifier
      */
-    public function getNextIdentifier(): string
+    public function getNextIdentifier()
     {
         $next = $this->getNext();
 
@@ -123,11 +149,13 @@ class TokenStream
     }
 
     /**
-     * Returns next identifier or null if star delimiter token is found.
+     * Returns nex identifier or star delimiter token.
+     *
+     * @return null|string The identifier token value or null if star found
      *
      * @throws SyntaxErrorException If next token is not an identifier or a star delimiter
      */
-    public function getNextIdentifierOrStar(): ?string
+    public function getNextIdentifierOrStar()
     {
         $next = $this->getNext();
 
@@ -135,8 +163,8 @@ class TokenStream
             return $next->getValue();
         }
 
-        if ($next->isDelimiter(['*'])) {
-            return null;
+        if ($next->isDelimiter(array('*'))) {
+            return;
         }
 
         throw SyntaxErrorException::unexpectedToken('identifier or "*"', $next);
@@ -145,7 +173,7 @@ class TokenStream
     /**
      * Skips next whitespace if any.
      */
-    public function skipWhitespace(): void
+    public function skipWhitespace()
     {
         $peek = $this->getPeek();
 

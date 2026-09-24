@@ -99,6 +99,25 @@ class PostieAutolink {
                         $buffer .= $fail_text;
                     }
                 }
+
+                if ($ok) {
+                    #
+                    # check to see if we're inside an HTML tag definition <...>
+                    #
+
+                    $last_open = strrpos($pre, '<');
+                    $last_close = strrpos($pre, '>');
+                    if ($last_open !== false && ($last_close === false || $last_open > $last_close)) {
+                        $tag_content = substr($pre, $last_open);
+                        if (preg_match('![\s"\']!', $tag_content)) {
+                            DebugEcho("autolink_do: inside an HTML tag, not linkifying");
+
+                            $ok = 0;
+                            $cursor += $fail_len;
+                            $buffer .= $fail_text;
+                        }
+                    }
+                }
             }
 
             #
@@ -300,7 +319,9 @@ class PostieAutolink {
                 # substring found - first check to see if we're inside a link tag already...
                 #
 
-                $bits = preg_split("!</a>!i", $pre);
+                $pre_full = substr($text, 0, $pos);
+
+                $bits = preg_split("!</a>!i", $pre_full);
                 $last_bit = array_pop($bits);
                 DebugEcho("autolink_email: check this for '<a' $last_bit");
 
@@ -317,7 +338,7 @@ class PostieAutolink {
                     #
                     # check to see if we're inside a shortcode
                     #
-                    $bits = preg_split("!\]!i", $pre);
+                    $bits = preg_split("!\]!i", $pre_full);
                     $last_bit = array_pop($bits);
                     DebugEcho("autolink_email: check this for '[' $last_bit");
                     if (preg_match("!\[!i", $last_bit)) {
@@ -327,6 +348,24 @@ class PostieAutolink {
                         $ok = 0;
                         $cursor += $fail_len;
                         $buffer .= $fail_text;
+                    }
+                }
+
+                if ($ok) {
+                    #
+                    # check to see if we're inside an HTML tag definition <...>
+                    #
+                    $last_open = strrpos($pre_full, '<');
+                    $last_close = strrpos($pre_full, '>');
+                    if ($last_open !== false && ($last_close === false || $last_open > $last_close)) {
+                        $tag_content = substr($pre_full, $last_open);
+                        if (preg_match('![\s"\']!', $tag_content)) {
+                            DebugEcho("autolink_email: inside an HTML tag, not linkifying");
+
+                            $ok = 0;
+                            $cursor += $fail_len;
+                            $buffer .= $fail_text;
+                        }
                     }
                 }
             }

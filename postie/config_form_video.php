@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <input type='hidden' id='postie-settings-selected_video1template' name='postie-settings[selected_video1template]'
                        value="<?php echo esc_attr($selected_video1template) ?>" />
                 <select name='video1templateselect' id='video1templateselect' 
-                        onchange="changeStyle('video1TemplatePreview', 'postie-settings-video1template', 'video1templateselect', 'postie-settings-selected_video1template', 'hi.mp4');" />
+                        onchange="changeStyle('video1TemplatePreview', 'postie-settings-video1template', 'video1templateselect', 'postie-settings-selected_video1template', 'hi.mp4');" >
                         <?php
                         include(POSTIE_ROOT . '/templates/video1_templates.php');
                         $styleOptions = $video1Templates;

@@ -25,25 +25,45 @@ use Symfony\Component\CssSelector\Parser\Token;
  */
 class FunctionNode extends AbstractNode
 {
-    private string $name;
+    /**
+     * @var NodeInterface
+     */
+    private $selector;
 
     /**
-     * @param Token[] $arguments
+     * @var string
      */
-    public function __construct(
-        private NodeInterface $selector,
-        string $name,
-        private array $arguments = [],
-    ) {
+    private $name;
+
+    /**
+     * @var Token[]
+     */
+    private $arguments;
+
+    /**
+     * @param NodeInterface $selector
+     * @param string        $name
+     * @param Token[]       $arguments
+     */
+    public function __construct(NodeInterface $selector, $name, array $arguments = array())
+    {
+        $this->selector = $selector;
         $this->name = strtolower($name);
+        $this->arguments = $arguments;
     }
 
-    public function getSelector(): NodeInterface
+    /**
+     * @return NodeInterface
+     */
+    public function getSelector()
     {
         return $this->selector;
     }
 
-    public function getName(): string
+    /**
+     * @return string
+     */
+    public function getName()
     {
         return $this->name;
     }
@@ -51,20 +71,28 @@ class FunctionNode extends AbstractNode
     /**
      * @return Token[]
      */
-    public function getArguments(): array
+    public function getArguments()
     {
         return $this->arguments;
     }
 
-    public function getSpecificity(): Specificity
+    /**
+     * {@inheritdoc}
+     */
+    public function getSpecificity()
     {
         return $this->selector->getSpecificity()->plus(new Specificity(0, 1, 0));
     }
 
-    public function __toString(): string
+    /**
+     * {@inheritdoc}
+     */
+    public function __toString()
     {
-        $arguments = implode(', ', array_map(static fn (Token $token) => "'".$token->getValue()."'", $this->arguments));
+        $arguments = implode(', ', array_map(function (Token $token) {
+            return "'".$token->getValue()."'";
+        }, $this->arguments));
 
-        return \sprintf('%s[%s:%s(%s)]', $this->getNodeName(), $this->selector, $this->name, $arguments ? '['.$arguments.']' : '');
+        return sprintf('%s[%s:%s(%s)]', $this->getNodeName(), $this->selector, $this->name, $arguments ? '['.$arguments.']' : '');
     }
 }

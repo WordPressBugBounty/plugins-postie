@@ -23,37 +23,72 @@ namespace Symfony\Component\CssSelector\Node;
  */
 class CombinedSelectorNode extends AbstractNode
 {
-    public function __construct(
-        private NodeInterface $selector,
-        private string $combinator,
-        private NodeInterface $subSelector,
-    ) {
+    /**
+     * @var NodeInterface
+     */
+    private $selector;
+
+    /**
+     * @var string
+     */
+    private $combinator;
+
+    /**
+     * @var NodeInterface
+     */
+    private $subSelector;
+
+    /**
+     * @param NodeInterface $selector
+     * @param string        $combinator
+     * @param NodeInterface $subSelector
+     */
+    public function __construct(NodeInterface $selector, $combinator, NodeInterface $subSelector)
+    {
+        $this->selector = $selector;
+        $this->combinator = $combinator;
+        $this->subSelector = $subSelector;
     }
 
-    public function getSelector(): NodeInterface
+    /**
+     * @return NodeInterface
+     */
+    public function getSelector()
     {
         return $this->selector;
     }
 
-    public function getCombinator(): string
+    /**
+     * @return string
+     */
+    public function getCombinator()
     {
         return $this->combinator;
     }
 
-    public function getSubSelector(): NodeInterface
+    /**
+     * @return NodeInterface
+     */
+    public function getSubSelector()
     {
         return $this->subSelector;
     }
 
-    public function getSpecificity(): Specificity
+    /**
+     * {@inheritdoc}
+     */
+    public function getSpecificity()
     {
         return $this->selector->getSpecificity()->plus($this->subSelector->getSpecificity());
     }
 
-    public function __toString(): string
+    /**
+     * {@inheritdoc}
+     */
+    public function __toString()
     {
         $combinator = ' ' === $this->combinator ? '<followed>' : $this->combinator;
 
-        return \sprintf('%s[%s %s %s]', $this->getNodeName(), $this->selector, $combinator, $this->subSelector);
+        return sprintf('%s[%s %s %s]', $this->getNodeName(), $this->selector, $combinator, $this->subSelector);
     }
 }

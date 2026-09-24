@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 7.0
-Stable tag: 1.9.86
+Stable tag: 1.9.87
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,11 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.87 (2026-09-24) =
+* Fix autolink issue
+* minor changes to follow plugin guidelines
+* Downgrade dependencies to be PHP 7+ compatible
+
 = 1.9.86 (2026-09-22) =
 * remove Symfony CssSelector dependency
 

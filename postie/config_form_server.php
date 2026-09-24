@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <table class='form-table' role='presentation'>
         <tbody>
             <tr>
-                <th scope="row"><lable for="postie-settings-input_connection"><?php esc_html_e('Connection', 'postie') ?></lable></th>
+                <th scope="row"><label for="postie-settings-input_connection"><?php esc_html_e('Connection', 'postie') ?></label></th>
         <td>
             <select name='postie-settings[input_connection]' id='postie-settings-input_connection'>
                 <option value="sockets"  <?php echo (($input_connection == "socket") ? " selected='selected' " : "") ?>>Sockets</option>
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </tr>
 
         <tr>
-            <th scope="row"><lable for="postie-settings-input_protocol"><?php esc_html_e('Mail Protocol', 'postie') ?></lable></th>
+            <th scope="row"><label for="postie-settings-input_protocol"><?php esc_html_e('Mail Protocol', 'postie') ?></label></th>
         <td>
             <select name='postie-settings[input_protocol]' id='postie-settings-input_protocol'>
                 <option value="pop3"  <?php echo (($input_protocol == "pop3") ? " selected='selected' " : "") ?>>POP3</option>

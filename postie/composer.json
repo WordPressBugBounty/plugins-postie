@@ -10,6 +10,11 @@
     "require": {
         "voku/simple_html_dom": "^4.8.10"
     },
+    "config": {
+        "platform": {
+            "php": "7.0.0"
+        }
+    },
     "scripts": {
         "phpcs": "tools/vendor/bin/phpcs -p . --standard=WordPress --ignore=vendor/,test/,tools/",
         "phpcompat": "tools/vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/,tools/",

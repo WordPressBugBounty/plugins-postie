@@ -46,3 +46,60 @@ table.checkbox-table td {
 .updated {
     overflow: hidden;
 }
+
+/* Card Grid Layout for Postie Add-ons */
+#postie-addons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Card Styling */
+.postie-addon-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    padding: 18px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Elegant Hover Effects */
+.postie-addon-card:hover {
+    border-color: #2271b1; /* Standard WP primary accent blue */
+    box-shadow: 0 4px 12px rgba(34, 113, 177, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Title & Description */
+.postie-addon-card h4.title {
+    margin: 0 0 10px 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+.postie-addon-card h4.title a {
+    color: #1d2327;
+    text-decoration: none;
+}
+.postie-addon-card h4.title a:hover {
+    color: #2271b1;
+}
+.postie-addon-card .description {
+    color: #50575e;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* Align Footer Buttons */
+.postie-addon-card-footer {
+    margin-top: auto;
+}
+.postie-addon-card-footer .button {
+    width: 100%;
+    text-align: center;
+}

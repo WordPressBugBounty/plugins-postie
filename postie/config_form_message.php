@@ -25,6 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 $args = array('name' => 'postie-settings[default_post_category]', 'hierarchical' => 1, 'selected' => $defaultCat, 'hide_empty' => 0);
                 wp_dropdown_categories($args);
                 ?>
+            </td>
         </tr>
         <?php
         echo PostieAdmin::boolean_select_html(__("Match short category", 'postie'), "postie-settings[category_match]", $category_match, __("Try to match categories using 'starts with logic' otherwise only do exact matches.<br />Note that custom taxonomies will not be found if this setting is 'No'", 'postie')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
