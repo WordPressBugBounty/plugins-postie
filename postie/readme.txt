@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 7.0
-Stable tag: 1.9.87
+Stable tag: 1.9.88
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,13 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.88 (2026-10-23) =
+* Fix Outlook desktop HTML email style block leakage into post content
+* Fix handling of XML namespaces in HTML email cleaning and linkification
+* Escape autolink href and title attributes to prevent XSS
+* Redact mailbox password from debug dumps and configuration logs
+* Remove unused test files from vendor dependencies
+
 = 1.9.87 (2026-09-24) =
 * Fix autolink issue
 * minor changes to follow plugin guidelines

@@ -189,12 +189,14 @@ function filter_CleanHtml($content) {
         DebugEcho("filter_CleanHtml: checking filter postie_cleanhtml");
         if (apply_filters('postie_cleanhtml', true)) {
             DebugEcho("filter_CleanHtml: Looking for invalid tags");
-            foreach ($html->find('//script | //style | //head') as $node) {
+            $removedInvalidTag = false;
+            foreach ($html->find('//*[local-name()="script" or local-name()="style" or local-name()="head"]') as $node) {
                 try {
                     $domNode = $node->getNode();
                     if ($domNode && $domNode->ownerDocument && $domNode->parentNode) {
                         DebugEcho("filter_CleanHtml: Removing: " . $node->outertext);
                         $node->outertext = '';
+                        $removedInvalidTag = true;
                     }
                 } catch (\Exception $e) {
                     // Node is already detached/deleted, skip
@@ -206,10 +208,12 @@ function filter_CleanHtml($content) {
 
             $html->load($html->save());
 
-            $b = $html->find('//body');
+            $b = $html->find('//*[local-name()="body"]');
             if (count($b) > 0 && stripos($content, '<body') !== false) {
                 DebugEcho("filter_CleanHtml: replacing body with div");
                 $content = "<div>" . $b[0]->innertext . "</div>\n";
+            } else if ($removedInvalidTag) {
+                $content = $html->save();
             }
         } else {
             DebugEcho("filter_CleanHtml: skipping clean html due to filter");
@@ -453,7 +457,7 @@ function filter_Linkify($text) {
     if (postie_is_html($text)) {
         $html = $g_postie->load_html($text);
         if ($html !== false) {
-            $es = $html->find('//body');
+            $es = $html->find('//*[local-name()="body"]');
             if (count($es) > 0 && stripos($text, '<body') !== false) {
                 DebugEcho("filter_linkify: found body");
                 $frag = $al->autolink($es[0]->innertext, $oe);

@@ -195,6 +195,16 @@ class PostieSettings implements \ArrayAccess {
     public function toArray(): array {
         return get_object_vars($this);
     }
+
+    public function toSafeArray(): array {
+        $data = $this->toArray();
+        unset($data['mail_password']);
+        return $data;
+    }
+
+    public function __debugInfo() {
+        return $this->toSafeArray();
+    }
 }
 
 class PostieConfig {

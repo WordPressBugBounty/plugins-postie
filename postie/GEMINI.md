@@ -135,8 +135,8 @@ Releasing a new version is a streamlined process guided by the deployment config
 4.  **Execute Deployment Script**:
     *   Run `deploy\deploy.cmd` (or `deploy/deploy.sh` on Unix-like environments) to automatically generate the `readme.txt` and build/package the release assets.
 5.  **Source Control**:
-    *   Commit all finalized files locally: `git commit -am "Prepare <version> release"`
-    *   Create a release tag: `git tag -a <version> -m "Release <version>"`
+    *   Commit all finalized files: `svn commit -m "Prepare <version> release"`
+    *   Create a release tag: `svn copy ^/postie/trunk ^/postie/tags/<version> -m "Release <version>"`
 6.  **Public Announcements**:
     *   Add a release post on the official Postie site: `http://postieplugin.com/`
     *   Add a release post on the WordPress Support Forums: `http://wordpress.org/support/plugin/postie`

@@ -41,9 +41,27 @@ function EchoError($v) {
     }
 }
 
+function postie_sanitize_debug_data($data) {
+    if ($data instanceof PostieSettings) {
+        return $data->toSafeArray();
+    }
+    if (is_array($data)) {
+        if (array_key_exists('mail_password', $data)) {
+            unset($data['mail_password']);
+        }
+        foreach ($data as $k => $item) {
+            if (is_array($item) || $item instanceof PostieSettings) {
+                $data[$k] = postie_sanitize_debug_data($item);
+            }
+        }
+    }
+    return $data;
+}
+
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function DebugDump($v) {
     global $g_postie;
+    $v = postie_sanitize_debug_data($v);
     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
     $d = print_r($v, true);
     if (Postie::is_debugmode() && !empty($g_postie)) {

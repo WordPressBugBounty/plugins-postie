@@ -147,12 +147,17 @@ class PostieAutolink {
                 $matches = array();
                 if (preg_match('/^([a-z0-9\-\.\/\-_%~!?=,:;&+*#@\(\)\$°’;]+)/i', $post, $matches)) {
 
-                    $url = $hit . $matches[1];
+                    $raw_url = $hit . $matches[1];
 
-                    $cursor += strlen($url) + strlen($pre_hit);
+                    $cursor += strlen($raw_url) + strlen($pre_hit);
                     $buffer .= $pre_hit;
 
-                    $url = html_entity_decode($url);
+                    $url = html_entity_decode($raw_url);
+
+                    if (preg_match('/[\s<>"\\\\\x00-\x1f\x7f]/', $url)) {
+                        $buffer .= $raw_url;
+                        continue;
+                    }
 
                     #
                     # remove trailing punctuation from url
@@ -201,7 +206,7 @@ class PostieAutolink {
 
                         if (!preg_match("!^(http|https)://{$display_quoted}$!i", $link_url)) {
 
-                            $currentTagfill .= ' title="' . $link_url . '"';
+                            $currentTagfill .= ' title="' . htmlspecialchars($link_url, ENT_QUOTES, 'UTF-8') . '"';
                         }
                     }
 
@@ -236,7 +241,7 @@ class PostieAutolink {
                     } else {
                         DebugEcho("autolink_do: linkifying $link_url");
                         try {
-                            $link_html = apply_filters('postie_bare_link', "<a href=\"{$link_url}\"$currentTagfill>{$display_url_enc}</a>", $link_url, false);
+                            $link_html = apply_filters('postie_bare_link', "<a href=\"{$link_url_enc}\"$currentTagfill>{$display_url_enc}</a>", $link_url, false);
                         } catch (Throwable $exc) {
                             EchoError('postie_bare_link: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
                         }
@@ -425,7 +430,8 @@ class PostieAutolink {
 
                 $cursor += strlen($pre) + strlen($hit);
                 $buffer .= $pre;
-                $buffer .= "<a href=\"mailto:$hit\" $tagfill>$hit</a>";
+                $hit_enc = htmlspecialchars($hit);
+                $buffer .= "<a href=\"mailto:$hit_enc\" $tagfill>$hit_enc</a>";
             }
         }
 

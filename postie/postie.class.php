@@ -76,8 +76,7 @@ class Postie {
 
         //don't output the password
         DebugEcho("postie configuration");
-        $tmp_config = $config;
-        unset($tmp_config['mail_password']);
+        $tmp_config = $config->toSafeArray();
         DebugDump($tmp_config);
 
         $conninfo = $this->connection_info($config);
