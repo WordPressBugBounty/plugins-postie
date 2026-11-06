@@ -28,8 +28,8 @@ check multiple email accounts
 allow other roles access to manual check like "Roles That Can Post"
 For IMAP mailboxes allow the user to choose the folder.
 Check to see if post already exists. Store hash in custom field.
-Add Message-ID header value to custom field (postie_message_id?) to both posts and comments.
-Use In-Reply-To/Message-ID header value as a better way to detect replies
+[Done] Add Message-ID header value to custom field (_postie_message_id) to both posts and comments.
+[Done] Use In-Reply-To/Message-ID header value as a better way to detect replies
 dynamically determine video size (height/width) - https://code.google.com/p/phpvideotoolkit/
 readme tips http://wp.smashingmagazine.com/2011/11/23/improve-wordpress-plugins-readme-txt/
 review http://codex.wordpress.org/Settings_API

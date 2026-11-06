@@ -6,8 +6,8 @@ Plugin URI: http://PostiePlugin.com/
 Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
-Tested up to: 7.0
-Stable tag: 1.9.88
+Tested up to: 7.1
+Stable tag: 1.9.89
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,10 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.89 (2026-11-05) =
+* PHP 8.5 compatibility
+* Better handling of email replies
+
 = 1.9.88 (2026-10-23) =
 * Fix Outlook desktop HTML email style block leakage into post content
 * Fix handling of XML namespaces in HTML email cleaning and linkification

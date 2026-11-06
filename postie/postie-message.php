@@ -6,6 +6,7 @@ class PostieMessage {
     private $config = array();
     private $poster = 0;
     private $post_id = 0;
+    private $comment_parent_id = 0;
     private $is_reply = false;
     public $content = '';
     public $subject = '';
@@ -707,7 +708,8 @@ class PostieMessage {
             'post_name' => $this->subject,
             'post_excerpt' => $post_excerpt,
             'ID' => $id,
-            'post_status' => $post_status
+            'post_status' => $post_status,
+            'comment_parent' => $this->comment_parent_id
         );
 
         //don't need to specify the post format to get a "standard" post
@@ -749,6 +751,11 @@ class PostieMessage {
                 $post_ID = null;
             } else {
                 DebugEcho("postie_save_post: post inserted");
+                $message_id = $this->get_message_id();
+                if (!empty($message_id)) {
+                    update_post_meta($post_ID, '_postie_message_id', '<' . $message_id . '>');
+                    DebugEcho("postie_save_post: saved message-id <$message_id> to post $post_ID");
+                }
             }
         } else {
             DebugEcho("postie_save_post: inserting comment");
@@ -764,7 +771,7 @@ class PostieMessage {
                 'comment_approved' => 1,
                 'comment_agent' => '',
                 'comment_type' => '',
-                'comment_parent' => 0,
+                'comment_parent' => isset($details['comment_parent']) ? $details['comment_parent'] : 0,
                 'user_id' => $details['user_ID']
             );
             try {
@@ -776,6 +783,14 @@ class PostieMessage {
             DebugDump($comment);
 
             $post_ID = wp_new_comment($comment);
+
+            if (!empty($post_ID) && !is_wp_error($post_ID)) {
+                $message_id = $this->get_message_id();
+                if (!empty($message_id)) {
+                    update_comment_meta($post_ID, '_postie_message_id', '<' . $message_id . '>');
+                    DebugEcho("postie_save_post: saved message-id <$message_id> to comment $post_ID");
+                }
+            }
 
             try {
                 DebugEcho("doing postie_comment_after");
@@ -836,6 +851,11 @@ class PostieMessage {
         $subject = $this->subject;
 
         $sendheaders = array("From: $eblogname <$myemailadd>");
+        $message_id = $this->get_message_id();
+        if (!empty($message_id)) {
+            $sendheaders[] = "In-Reply-To: <$message_id>";
+            $sendheaders[] = "References: <$message_id>";
+        }
 
         $post_status = get_post_status($postid);
 
@@ -1514,53 +1534,156 @@ class PostieMessage {
         return $id;
     }
 
-    /* we check whether or not the email is a reply to a previously
-     * published post. First we check whether it starts with Re:, and then
-     * we see if the remainder matches an already existing post. If so,
-     * then we add that post id to the details array, which will cause the
-     * existing post to be overwritten, instead of a new one being
-     * generated
+    function parse_message_ids($raw) {
+        if (is_array($raw)) {
+            $result = array();
+            foreach ($raw as $item) {
+                $result = array_merge($result, $this->parse_message_ids($item));
+            }
+            return $result;
+        }
+        if (!is_string($raw)) {
+            return array();
+        }
+        $ids = array();
+        if (preg_match_all('/<([^>]+)>/', $raw, $matches)) {
+            foreach ($matches[1] as $m) {
+                $clean = trim($m);
+                if (!empty($clean)) {
+                    $ids[] = $clean;
+                }
+            }
+        } else {
+            $clean = trim($raw, " \t\n\r\0\x0B<>");
+            if (!empty($clean)) {
+                $ids[] = $clean;
+            }
+        }
+        return $ids;
+    }
+
+    function get_reply_message_ids() {
+        $ids = array();
+        if (!empty($this->email['headers']) && is_array($this->email['headers'])) {
+            if (!empty($this->email['headers']['in-reply-to'])) {
+                $ids = array_merge($ids, $this->parse_message_ids($this->email['headers']['in-reply-to']));
+            }
+            if (!empty($this->email['headers']['references'])) {
+                // References list ancestors; reverse to prioritize immediate parent
+                $ref_ids = $this->parse_message_ids($this->email['headers']['references']);
+                $ids = array_merge($ids, array_reverse($ref_ids));
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
+    function get_message_id() {
+        if (empty($this->email['headers']) || !is_array($this->email['headers']) || empty($this->email['headers']['message-id'])) {
+            return '';
+        }
+        $ids = $this->parse_message_ids($this->email['headers']['message-id']);
+        return !empty($ids) ? $ids[0] : '';
+    }
+
+    /* Check whether the email is a reply to an existing post or comment.
+     * First, we check RFC 5322 In-Reply-To and References headers against
+     * stored _postie_message_id meta for posts and comments. If no match is
+     * found, we fall back to checking if the subject begins with Re: and
+     * matches the title of an existing published post.
      */
 
     function get_parent_postid(&$subject) {
         global $wpdb;
 
-        $id = NULL;
+        $id = null;
+        $this->comment_parent_id = 0;
         DebugEcho("get_parent_postid: Looking for parent '$subject'");
-        // see if subject starts with Re:
-        $matches = array();
-        if (preg_match("/(^Re:)(.*)/iu", $subject, $matches)) {
-            DebugEcho("get_parent_postid: Re: detected");
-            $subject = trim($matches[2]);
-            // strip out category info into temporary variable
-            $tmpSubject = $subject;
-            if (preg_match('/(.+): (.*)/u', $tmpSubject, $matches)) {
-                $tmpSubject = trim($matches[2]);
-                $matches[1] = array($matches[1]);
-            } else if (preg_match_all('/\[(.[^\[]*)\]/', $tmpSubject, $matches)) {
-                $tmpSubject_matches = array();
-                preg_match("/](.[^\[]*)$/", $tmpSubject, $tmpSubject_matches);
-                $tmpSubject = trim($tmpSubject_matches[1]);
-            } else if (preg_match_all('/-(.[^-]*)-/', $tmpSubject, $matches)) {
-                preg_match("/-(.[^-]*)$/", $tmpSubject, $tmpSubject_matches);
-                $tmpSubject = trim($tmpSubject_matches[1]);
+
+        // 1. Check RFC 5322 In-Reply-To / References headers
+        $reply_ids = $this->get_reply_message_ids();
+        if (!empty($reply_ids)) {
+            DebugEcho("get_parent_postid: Checking message IDs from headers: " . implode(', ', $reply_ids));
+            foreach ($reply_ids as $msg_id) {
+                // Check postmeta for matching parent post
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+                $post_match = $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT p.ID FROM $wpdb->posts p INNER JOIN $wpdb->postmeta pm ON p.ID = pm.post_id WHERE pm.meta_key IN ('_postie_message_id', 'postie_message_id') AND pm.meta_value IN (%s, %s) AND p.post_status = 'publish' AND p.comment_status = 'open' AND p.post_type = %s ORDER BY p.post_date DESC LIMIT 1",
+                        '<' . $msg_id . '>',
+                        $msg_id,
+                        $this->config->post_type
+                    )
+                );
+                if (!empty($post_match)) {
+                    $id = $post_match;
+                    DebugEcho("get_parent_postid: Found parent post $id via postmeta for Message-ID $msg_id");
+                    break;
+                }
+
+                // Check commentmeta for matching parent comment
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+                $comment_match = $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT cm.comment_id FROM $wpdb->commentmeta cm INNER JOIN $wpdb->comments c ON cm.comment_id = c.comment_ID INNER JOIN $wpdb->posts p ON c.comment_post_ID = p.ID WHERE cm.meta_key IN ('_postie_message_id', 'postie_message_id') AND cm.meta_value IN (%s, %s) AND c.comment_approved = '1' AND p.post_status = 'publish' AND p.comment_status = 'open' AND p.post_type = %s ORDER BY c.comment_date DESC LIMIT 1",
+                        '<' . $msg_id . '>',
+                        $msg_id,
+                        $this->config->post_type
+                    )
+                );
+                if (!empty($comment_match)) {
+                    $comment = get_comment($comment_match);
+                    $parent_post_id = is_object($comment) ? $comment->comment_post_ID : (is_array($comment) ? $comment['comment_post_ID'] : 0);
+                    if (!empty($parent_post_id)) {
+                        $id = $parent_post_id;
+                        $this->comment_parent_id = (int) $comment_match;
+                        DebugEcho("get_parent_postid: Found parent post $id and parent comment $comment_match via commentmeta for Message-ID $msg_id");
+                        break;
+                    }
+                }
             }
-            DebugEcho("get_parent_postid: tmpSubject: $tmpSubject");
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-            $id = $wpdb->get_var(
-                $wpdb->prepare(
-                    "SELECT ID FROM $wpdb->posts WHERE post_title LIKE %s AND post_status = 'publish' AND comment_status = 'open' AND post_type=%s ORDER BY post_date DESC",
-                    $tmpSubject,
-                    $this->config->post_type
-                )
-            );
-            if (empty($id)) {
-                DebugEcho("get_parent_postid: No parent id found");
-            } else {
-                DebugEcho("get_parent_postid: id: $id");
+        }
+
+        if (!empty($id)) {
+            // Strip reply prefix from subject if present
+            if (preg_match('/^(?:re|aw|antw|réf|sv|vs|rv|r)\s*:\s*(.*)/iu', $subject, $matches)) {
+                $subject = trim($matches[1]);
             }
         } else {
-            DebugEcho("get_parent_postid: No parent found");
+            // 2. Fallback: see if subject starts with Re:
+            $matches = array();
+            if (preg_match("/(^Re:)(.*)/iu", $subject, $matches)) {
+                DebugEcho("get_parent_postid: Re: detected");
+                $subject = trim($matches[2]);
+                // strip out category info into temporary variable
+                $tmpSubject = $subject;
+                if (preg_match('/(.+): (.*)/u', $tmpSubject, $matches)) {
+                    $tmpSubject = trim($matches[2]);
+                    $matches[1] = array($matches[1]);
+                } else if (preg_match_all('/\[(.[^\[]*)\]/', $tmpSubject, $matches)) {
+                    $tmpSubject_matches = array();
+                    preg_match("/](.[^\[]*)$/", $tmpSubject, $tmpSubject_matches);
+                    $tmpSubject = trim($tmpSubject_matches[1]);
+                } else if (preg_match_all('/-(.[^-]*)-/', $tmpSubject, $matches)) {
+                    preg_match("/-(.[^-]*)$/", $tmpSubject, $tmpSubject_matches);
+                    $tmpSubject = trim($tmpSubject_matches[1]);
+                }
+                DebugEcho("get_parent_postid: tmpSubject: $tmpSubject");
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+                $id = $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT ID FROM $wpdb->posts WHERE post_title LIKE %s AND post_status = 'publish' AND comment_status = 'open' AND post_type=%s ORDER BY post_date DESC",
+                        $tmpSubject,
+                        $this->config->post_type
+                    )
+                );
+                if (empty($id)) {
+                    DebugEcho("get_parent_postid: No parent id found");
+                } else {
+                    DebugEcho("get_parent_postid: id: $id");
+                }
+            } else {
+                DebugEcho("get_parent_postid: No parent found");
+            }
         }
 
         try {

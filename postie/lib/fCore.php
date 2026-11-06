@@ -612,7 +612,7 @@ class fCore {
      * @return void
      */
     static public function enableDebugging($flag) {
-        self::$debug = (boolean) $flag;
+        self::$debug = (bool) $flag;
     }
 
     /**
