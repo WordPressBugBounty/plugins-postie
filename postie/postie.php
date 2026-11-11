@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.89
+  Version: 1.9.90
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3786906 2026-11-06 00:01:33Z WayneAllen $
+  $Id: postie.php 3796950 2026-11-11 19:29:46Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
@@ -53,7 +53,6 @@ if (!class_exists('PostieInit')) {
         public function __construct() {
             //WordPress Actions
             add_action('init', array($this, 'init_action'), 20);
-            add_action('parse_request', array($this, 'parse_request_action'));
             add_action('admin_init', array($this, 'admin_init_action'));
             add_action('admin_menu', array($this, 'admin_menu_action'));
             add_action('admin_head', array($this, 'admin_head_action'));
@@ -68,7 +67,6 @@ if (!class_exists('PostieInit')) {
                 add_filter('whitelist_options', array($this, 'whitelist_options_filter'));
             }
             add_filter('cron_schedules', array($this, 'cron_schedules_filter'));
-            add_filter('query_vars', array($this, 'query_vars_filter'));
             add_filter("plugin_action_links_" . plugin_basename(__FILE__), array($this, 'plugin_action_links_filter'));
             add_filter('plugin_row_meta', array($this, 'plugin_row_meta_filter'), 10, 2);
             add_filter('enable_post_by_email_configuration', array($this, 'enable_post_by_email_configuration'));
@@ -82,6 +80,8 @@ if (!class_exists('PostieInit')) {
 
             //Postie actions
             add_action('check_postie_hook', 'postie_check');
+            add_action('wp_ajax_postie_run_manual', array($this, 'ajax_run_manual'));
+            add_action('wp_ajax_postie_test_config', array($this, 'ajax_test_config'));
 
             if (is_admin()) {
                 $this->postie_warnings();
@@ -234,21 +234,6 @@ if (!class_exists('PostieInit')) {
             return $links;
         }
 
-        function parse_request_action($wp) {
-            if (array_key_exists('postie', $wp->query_vars)) {
-                switch ($wp->query_vars['postie']) {
-                    case 'get-mail':
-                        postie_get_mail();
-                        die();
-                    case 'test-config':
-                        postie_test_config();
-                        die();
-                    default :
-                        die('Unknown option: ' . esc_html($wp->query_vars['postie']));
-                }
-            }
-        }
-
         function admin_init_action() {
             wp_register_style('postie-style', plugins_url('css/style.css', __FILE__), array(), POSTIE_VERSION);
             wp_register_script('postie-admin-script', plugins_url('js/postie-admin.js', __FILE__), array('jquery'), POSTIE_VERSION, true);
@@ -256,8 +241,175 @@ if (!class_exists('PostieInit')) {
                 'iconDir'     => POSTIE_URL . 'icons',
                 'templateDir' => POSTIE_URL . 'templates',
                 'siteUrl'     => get_option('siteurl'),
+                'ajaxUrl'     => admin_url('admin-ajax.php'),
+                'nonce'       => wp_create_nonce('postie_action_nonce_action'),
+                'strings'     => array(
+                    'processing'        => __('Processing emails...', 'postie'),
+                    'processingDebug'   => __('Processing emails with debug output...', 'postie'),
+                    'processingDesc'    => __('Connecting to mail server and checking for new messages. Please wait...', 'postie'),
+                    'processComplete'   => __('Email Processing Complete', 'postie'),
+                    'processFailed'     => __('Email Processing Failed', 'postie'),
+                    'noEmails'          => __('Mailbox checked. No new emails found.', 'postie'),
+                    'close'             => __('Close', 'postie'),
+                    'viewPost'          => __('View', 'postie'),
+                    'editPost'          => __('Edit', 'postie'),
+                    'viewComment'       => __('View Comment', 'postie'),
+                    'copyLogs'          => __('Copy Logs', 'postie'),
+                    'copied'            => __('Copied!', 'postie'),
+                    'postsCreated'      => __('Posts Created', 'postie'),
+                    'commentsCreated'   => __('Comments Created', 'postie'),
+                    'messagesSkipped'   => __('Messages Skipped', 'postie'),
+                    'errorsEncountered' => __('Errors Encountered', 'postie'),
+                    'serverError'       => __('An unexpected server error occurred.', 'postie'),
+                    'testingConfig'     => __('Testing configuration...', 'postie'),
+                    'testingConfigDesc' => __('Connecting to mail server and verifying configuration. Please wait...', 'postie'),
+                    'testComplete'      => __('Configuration Test Complete', 'postie'),
+                    'testFailed'        => __('Configuration Test Failed', 'postie'),
+                    'connSuccess'       => __('Mail server connected successfully!', 'postie'),
+                    'connFailed'        => __('Mail server connection failed', 'postie'),
+                ),
             ));
             register_setting('postie-settings', 'postie-settings', array($this, 'lazy_validate_settings'));
+        }
+
+        function ajax_run_manual() {
+            $nonce = isset($_POST['postie_action_nonce']) ? sanitize_key(wp_unslash($_POST['postie_action_nonce'])) : '';
+            if (empty($nonce) || !wp_verify_nonce($nonce, 'postie_action_nonce_action')) {
+                wp_send_json_error(array(
+                    'message' => __('Security check failed. Please refresh the page and try again.', 'postie'),
+                ));
+            }
+
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(array(
+                    'message' => __('You do not have sufficient permissions to perform this action.', 'postie'),
+                ));
+            }
+
+            $debug = isset($_POST['debug']) && ($_POST['debug'] === 'true' || $_POST['debug'] === '1' || $_POST['debug'] === 1);
+            if ($debug && !defined('POSTIE_DEBUG')) {
+                define('POSTIE_DEBUG', true);
+            }
+
+            $logs = array();
+            $log_collector = function($msg) use (&$logs) {
+                if (is_scalar($msg)) {
+                    $logs[] = (string) $msg;
+                } else {
+                    $logs[] = print_r(postie_sanitize_debug_data($msg), true);
+                }
+            };
+            add_action('postie_log_debug', $log_collector);
+
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(300);
+            }
+
+            ob_start();
+            $start_time = microtime(true);
+            $result = null;
+            $error_message = null;
+
+            try {
+                $result = postie_get_mail();
+            } catch (Throwable $t) {
+                $error_message = $t->getMessage();
+            }
+
+            $raw_output = ob_get_clean();
+            remove_action('postie_log_debug', $log_collector);
+
+            $duration = round(microtime(true) - $start_time, 2);
+
+            if (!empty($raw_output) && empty($logs)) {
+                $logs[] = strip_tags($raw_output);
+            }
+
+            if ($error_message !== null) {
+                wp_send_json_error(array(
+                    'message'  => $error_message,
+                    'duration' => $duration . 's',
+                    'debug'    => $debug,
+                    'logs'     => $logs,
+                ));
+            }
+
+            wp_send_json_success(array(
+                'result'   => $result,
+                'duration' => $duration . 's',
+                'debug'    => $debug,
+                'logs'     => $logs,
+            ));
+        }
+
+        function ajax_test_config() {
+            $nonce = isset($_POST['postie_action_nonce']) ? sanitize_key(wp_unslash($_POST['postie_action_nonce'])) : '';
+            if (empty($nonce) || !wp_verify_nonce($nonce, 'postie_action_nonce_action')) {
+                wp_send_json_error(array(
+                    'message' => __('Security check failed. Please refresh the page and try again.', 'postie'),
+                ));
+            }
+
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(array(
+                    'message' => __('You do not have sufficient permissions to perform this action.', 'postie'),
+                ));
+            }
+
+            global $g_postie;
+            if (empty($g_postie)) {
+                $g_postie = new Postie();
+            }
+
+            $logs = array();
+            $log_collector = function($msg) use (&$logs) {
+                if (is_scalar($msg)) {
+                    $logs[] = (string) $msg;
+                } else {
+                    $logs[] = print_r(postie_sanitize_debug_data($msg), true);
+                }
+            };
+            add_action('postie_log_debug', $log_collector);
+
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(120);
+            }
+
+            ob_start();
+            $start_time = microtime(true);
+            $result = null;
+            $error_message = null;
+
+            try {
+                $g_postie->postie_environment(true);
+                $g_postie->postie_environment_encoding(true);
+                $result = $g_postie->run_config_test();
+            } catch (Throwable $t) {
+                $error_message = $t->getMessage();
+            }
+
+            $raw_output = ob_get_clean();
+            remove_action('postie_log_debug', $log_collector);
+
+            $duration = round(microtime(true) - $start_time, 2);
+
+            if (!empty($raw_output) && empty($logs)) {
+                $logs[] = strip_tags($raw_output);
+            }
+
+            if ($error_message !== null) {
+                wp_send_json_error(array(
+                    'message'  => $error_message,
+                    'duration' => $duration . 's',
+                    'logs'     => $logs,
+                ));
+            }
+
+            wp_send_json_success(array(
+                'result'   => $result,
+                'duration' => $duration . 's',
+                'logs'     => $logs,
+            ));
         }
 
         function lazy_validate_settings($in) {
@@ -300,11 +452,6 @@ if (!class_exists('PostieInit')) {
             return $schedules;
         }
 
-        function query_vars_filter($vars) {
-            $vars[] = 'postie';
-            return $vars;
-        }
-
         function plugin_action_links_filter($links) {
             $links[] = '<a href="admin.php?page=postie-settings">Settings</a>';
             return $links;
@@ -312,7 +459,7 @@ if (!class_exists('PostieInit')) {
 
         function postie_show_config_page() {
             global $g_postie;
-            require_once POSTIE_ROOT . '/config_form.php';
+            require_once POSTIE_ROOT . '/admin/views/settings-page.php';
         }
 
         function postie_admin_styles() {

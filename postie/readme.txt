@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 7.1
-Stable tag: 1.9.89
+Stable tag: 1.9.90
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,19 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.90 (2026-11-09) =
+* Global Function Encapsulation & Conflict Resolution
+* Late Escaping & Variable Safety in config_form_support.php
+* Edge-Case & Code Review Fixes
+* Redact passwords from exception traces and suppress stack traces in on-screen output
+* Remove obsolete get_mail.php, URL query_vars/parse_request triggers, and dead cronless action branch
+
+= 1.9.90 (2026-11-11) =
+* Settings Page Reorganization & Architecture
+* Modern AJAX Modal for Admin Actions
+* Security Hardening & Edge-Case Resilience
+* Global Namespace Encapsulation & Legacy Code Removal
+
 = 1.9.89 (2026-11-05) =
 * PHP 8.5 compatibility
 * Better handling of email replies

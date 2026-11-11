@@ -1,4 +1,11 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-compatibility.php');
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-filters.php');
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-tags.php');
 
 class PostieMessage {
 
@@ -30,7 +37,7 @@ class PostieMessage {
             }
             if (!empty($email['html'])) {
                 DebugEcho("getemails: html");
-                $email['html'] = filter_CleanHtml($email['html']);
+                $email['html'] = PostieFilter::filter_CleanHtml($email['html']);
             } else {
                 DebugEcho("getemails: no html");
             }
@@ -516,17 +523,17 @@ class PostieMessage {
 
         $this->save_attachments($this->post_id, $this->poster);
 
-        $this->content = filter_RemoveSignature($this->content, $this->config);
+        $this->content = PostieFilter::filter_RemoveSignature($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post filter_RemoveSignature: $this->content");
         }
 
-        $this->content = filter_Newlines($this->content, $this->config);
+        $this->content = PostieFilter::filter_Newlines($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post filter_Newlines: $this->content");
         }
 
-        $post_excerpt = tag_Excerpt($this->content, $this->config);
+        $post_excerpt = PostieTag::tag_Excerpt($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_Excerpt: $this->content");
         }
@@ -546,7 +553,7 @@ class PostieMessage {
             } else {
                 $message_date = $this->email['headers']['date'];
                 DebugEcho("decoded date: $message_date");
-                list($message_date, $delay) = tag_Delay($this->content, $message_date, $this->config);
+                list($message_date, $delay) = PostieTag::tag_Delay($this->content, $message_date, $this->config);
                 if ($fulldebug) {
                     DebugEcho("post tag_Delay: $this->content");
                 }
@@ -556,14 +563,14 @@ class PostieMessage {
             $message_date = current_time('mysql');
         }
 
-        $post_date = tag_Date($this->content, $message_date, $this->config);
+        $post_date = PostieTag::tag_Date($this->content, $message_date, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_Date: $this->content");
         }
 
 
         //do post type before category to keep the subject line correct
-        $post_type_format = tag_PostType($this->subject, $this->config);
+        $post_type_format = PostieTag::tag_PostType($this->subject, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_PostType: $this->content");
         }
@@ -578,34 +585,34 @@ class PostieMessage {
         }
         DebugEcho("post postie_category_default: '$default_categoryid'");
 
-        $post_categories = tag_Categories($this->subject, $default_categoryid, $this->config, $this->post_id);
+        $post_categories = PostieTag::tag_Categories($this->subject, $default_categoryid, $this->config, $this->post_id);
         if ($fulldebug) {
             DebugEcho("post tag_Categories: $this->content");
         }
 
-        $post_tags = tag_Tags($this->content, $this->config);
+        $post_tags = PostieTag::tag_Tags($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_Tags: $this->content");
         }
 
-        $comment_status = tag_AllowCommentsOnPost($this->content, $this->config);
+        $comment_status = PostieTag::tag_AllowCommentsOnPost($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_AllowCommentsOnPost: $this->content");
         }
 
-        $post_status = tag_Status($this->content, $this->config);
+        $post_status = PostieTag::tag_Status($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post tag_Status: $this->content");
         }
 
         //handle CID before linkify
-        $this->content = filter_ReplaceImageCIDs($this->content, $this->email);
+        $this->content = PostieFilter::filter_ReplaceImageCIDs($this->content, $this->email);
         if ($fulldebug) {
             DebugEcho("post filter_ReplaceImageCIDs: $this->content");
         }
 
         if ($this->config->converturls) {
-            $this->content = filter_Linkify($this->content);
+            $this->content = PostieFilter::filter_Linkify($this->content);
             if ($fulldebug) {
                 DebugEcho("post filter_Linkify: $this->content");
             }
@@ -652,23 +659,23 @@ class PostieMessage {
             $post_status = 'future';
         }
 
-        $this->content = filter_Start($this->content, $this->config);
+        $this->content = PostieFilter::filter_Start($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post filter_Start: $this->content");
         }
 
-        $this->content = filter_End($this->content, $this->config);
+        $this->content = PostieFilter::filter_End($this->content, $this->config);
         if ($fulldebug) {
             DebugEcho("post filter_End: $this->content");
         }
 
-        $this->content = filter_ReplaceImagePlaceHolders($this->content, $this->email, $this->config, $id, $this->config->image_placeholder);
+        $this->content = PostieFilter::filter_ReplaceImagePlaceHolders($this->content, $this->email, $this->config, $id, $this->config->image_placeholder);
         if ($fulldebug) {
             DebugEcho("post filter_ReplaceImagePlaceHolders: $this->content");
         }
 
         if ($post_excerpt) {
-            $post_excerpt = filter_ReplaceImagePlaceHolders($post_excerpt, $this->email, $this->config, $id, '#eimg%#');
+            $post_excerpt = PostieFilter::filter_ReplaceImagePlaceHolders($post_excerpt, $this->email, $this->config, $id, '#eimg%#');
             DebugEcho("excerpt: $post_excerpt");
             if ($fulldebug) {
                 DebugEcho("post excerpt ReplaceImagePlaceHolders: $this->content");
@@ -677,13 +684,13 @@ class PostieMessage {
 
         //handle inline images after linkify
         if ('plain' == $this->config->prefer_text_type) {
-            $this->content = filter_ReplaceInlineImage($this->content, $this->email, $this->config);
+            $this->content = PostieFilter::filter_ReplaceInlineImage($this->content, $this->email, $this->config);
             if ($fulldebug) {
                 DebugEcho("post filter_ReplaceInlineImage: $this->content");
             }
         }
 
-        $this->content = filter_AttachmentTemplates($this->content, $this->email, $this->post_id, $this->config);
+        $this->content = PostieFilter::filter_AttachmentTemplates($this->content, $this->email, $this->post_id, $this->config);
 
         if ($this->config->add_wrapper_div) {
             DebugEcho('Adding div');
@@ -1309,7 +1316,7 @@ class PostieMessage {
         }
 
         foreach ($bannedFiles as $bannedFile) {
-            if (fnmatch($bannedFile, $filename)) {
+            if (PostieCompatibility::fnmatch($bannedFile, $filename)) {
                 EchoError("Ignoring attachment: $filename - it is on the banned files list.");
                 $this->email_error("Ignoring attachment: $filename - it is on the banned files list.", "Ignoring attachment: $filename - it is on the banned files list.");
                 return true;

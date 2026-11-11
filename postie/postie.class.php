@@ -29,6 +29,8 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "postie-tags.php");
 
 class Postie {
 
+    public $last_run_result = array();
+
     function load_html($text) {
         return \voku\helper\HtmlDomParser::str_get_html($text, true, true, DEFAULT_TARGET_CHARSET, false);
     }
@@ -50,7 +52,8 @@ class Postie {
             DebugEcho("doing postie_session_start");
             do_action('postie_session_start');
         } catch (Throwable $exc) {
-            EchoError('postie_session_start: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+            EchoError('postie_session_start: ' . $exc->getMessage());
+            $this->log_trace($exc, $config->mail_password, 'postie_session_start');
         }
 
         DebugEcho('Starting mail fetch');
@@ -81,18 +84,21 @@ class Postie {
 
         $conninfo = $this->connection_info($config);
 
-        $this->fetch_mail($conninfo['mail_server'], $conninfo['mail_port'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_protocol'], $conninfo['email_delete_after_processing'], $conninfo['email_max']);
+        $summary = $this->fetch_mail($conninfo['mail_server'], $conninfo['mail_port'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_protocol'], $conninfo['email_delete_after_processing'], $conninfo['email_max']);
 
         try {
             DebugEcho("doing postie_session_end");
             do_action('postie_session_end');
         } catch (Throwable $exc) {
-            EchoError('postie_session_end: ' . $exc->getMessage() . "\n" . $exc->getTraceAsString());
+            EchoError('postie_session_end: ' . $exc->getMessage());
+            $this->log_trace($exc, $conninfo['mail_password'], 'postie_session_end');
         }
 
         if (function_exists('memory_get_usage')) {
             DebugEcho('memory at end of email processing: ' . memory_get_usage());
         }
+
+        return $summary;
     }
 
     function intermediate_image_sizes_advanced($sizes) {
@@ -166,11 +172,61 @@ class Postie {
      */
     function fetch_mail($server, $port, $email, $password, $protocol, $deleteMessages, $maxemails) {
 
-        $emails = array();
+        $result = array(
+            'success'   => true,
+            'total'     => 0,
+            'processed' => 0,
+            'skipped'   => 0,
+            'posts'     => array(),
+            'comments'  => array(),
+            'errors'    => array(),
+        );
+
         if (!$server || !$port || !$email) {
             EchoError("Missing Configuration For Mail Server");
-            return $emails;
+            $result['success'] = false;
+            $result['errors'][] = __("Missing Configuration For Mail Server", 'postie');
+            $this->last_run_result = $result;
+            return $result;
         }
+
+        $posts_hook = function($details) use (&$result) {
+            $post_id = isset($details['ID']) ? $details['ID'] : 0;
+            if ($post_id) {
+                $title = function_exists('get_the_title') ? get_the_title($post_id) : '';
+                if (empty($title) && isset($details['post_title'])) {
+                    $title = $details['post_title'];
+                }
+                if (empty($title)) {
+                    $title = __('(No title)', 'postie');
+                }
+                $edit_url = function_exists('get_edit_post_link') ? get_edit_post_link($post_id, 'raw') : '';
+                if (empty($edit_url) && function_exists('admin_url')) {
+                    $edit_url = admin_url('post.php?post=' . $post_id . '&action=edit');
+                }
+                $result['posts'][] = array(
+                    'id'       => $post_id,
+                    'title'    => $title,
+                    'status'   => function_exists('get_post_status') ? get_post_status($post_id) : (isset($details['post_status']) ? $details['post_status'] : 'draft'),
+                    'type'     => function_exists('get_post_type') ? get_post_type($post_id) : (isset($details['post_type']) ? $details['post_type'] : 'post'),
+                    'edit_url' => $edit_url,
+                    'view_url' => function_exists('get_permalink') ? get_permalink($post_id) : '',
+                );
+            }
+        };
+        add_action('postie_post_after', $posts_hook);
+
+        $comments_hook = function($comment, $post_id) use (&$result) {
+            $comment_id = is_numeric($post_id) ? $post_id : (isset($comment['comment_ID']) ? $comment['comment_ID'] : 0);
+            $target_post_id = isset($comment['comment_post_ID']) ? $comment['comment_post_ID'] : 0;
+            $result['comments'][] = array(
+                'id'       => $comment_id,
+                'post_id'  => $target_post_id,
+                'author'   => isset($comment['comment_author']) ? $comment['comment_author'] : '',
+                'view_url' => function_exists('get_comment_link') ? get_comment_link($comment_id) : '',
+            );
+        };
+        add_action('postie_comment_after', $comments_hook, 10, 2);
 
         DebugEcho("fetch_mail: Connecting to $server:$port ($protocol)");
 
@@ -179,6 +235,7 @@ class Postie {
         try {
             $mailbox = $this->get_mailbox($server, $port, $email, $password, $protocol, $config);
             $messages = $mailbox->listMessages($maxemails);
+            $result['total'] = count($messages);
 
             /* translators: %d: number of messages */
             DebugEcho(sprintf(__("fetch_mail: There are %d messages to process", 'postie'), count($messages)));
@@ -201,11 +258,13 @@ class Postie {
                         $message = __('Dang, message is empty!', 'postie');
                         EchoError("fetch_mail: $message_number: ");
                         DebugDump($message);
+                        $result['skipped']++;
                         continue;
                     } else if ($email->is_email_read()) {
                         $message = __("Message is already marked 'read'.", 'postie');
                         DebugEcho("fetch_mail: $message_number");
                         DebugDump($message);
+                        $result['skipped']++;
                         continue;
                     }
 
@@ -213,6 +272,7 @@ class Postie {
                     $email->process();
                     $email->postprocess();
 
+                    $result['processed']++;
                     DebugEcho("fetch_mail: $message_number: processed");
 
                     if ($deleteMessages) {
@@ -220,7 +280,9 @@ class Postie {
                         $mailbox->deleteMessages($message['uid']);
                     }
                 } catch (Throwable $e) {
-                    EchoError("fetch_mail message error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                    EchoError("fetch_mail message error: " . $e->getMessage());
+                    $result['errors'][] = $e->getMessage();
+                    $this->log_trace($e, $password, 'fetch_mail message error');
                     if ($email !== null) {
                         $email->cleanup_after_error();
                     }
@@ -233,7 +295,15 @@ class Postie {
             DebugEcho("Mail fetch complete, $message_number emails");
         } catch (Throwable $e) {
             EchoError("fetch_mail: " . $e->getMessage());
+            $result['success'] = false;
+            $result['errors'][] = $e->getMessage();
         }
+
+        remove_action('postie_post_after', $posts_hook);
+        remove_action('postie_comment_after', $comments_hook, 10);
+
+        $this->last_run_result = $result;
+        return $result;
     }
 
     function postie_environment_encoding($force_display = false) {
@@ -335,7 +405,7 @@ class Postie {
             DebugEcho("WordPress cron is disabled. Postie will not run unless you have an external cron set up.", $force_display);
         }
 
-        if (defined('WP_MAX_MEMORY_LIMIT ')) {
+        if (defined('WP_MAX_MEMORY_LIMIT')) {
             DebugEcho("WP_MAX_MEMORY_LIMIT: " . WP_MAX_MEMORY_LIMIT, $force_display);
         } else {
             DebugEcho("WP_MAX_MEMORY_LIMIT: 256M (default)", $force_display);
@@ -350,13 +420,19 @@ class Postie {
         DebugEcho("imagick version: " . phpversion('imagick'), $force_display);
         DebugEcho("gd version: " . phpversion('gd'), $force_display);
 
-        require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
-        require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';
-        require_once ABSPATH . WPINC . '/class-wp-image-editor-imagick.php';
+        if (file_exists(ABSPATH . WPINC . '/class-wp-image-editor.php')) {
+            require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
+        }
+        if (file_exists(ABSPATH . WPINC . '/class-wp-image-editor-gd.php')) {
+            require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';
+        }
+        if (file_exists(ABSPATH . WPINC . '/class-wp-image-editor-imagick.php')) {
+            require_once ABSPATH . WPINC . '/class-wp-image-editor-imagick.php';
+        }
         // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         $implementations = apply_filters('wp_image_editors', array('WP_Image_Editor_Imagick', 'WP_Image_Editor_GD'));
         foreach ($implementations as $implementation) {
-            if (!call_user_func(array($implementation, 'test'))) {
+            if (!class_exists($implementation) || !call_user_func(array($implementation, 'test'))) {
                 DebugEcho("image editor not supported: $implementation", $force_display);
                 continue;
             } else {
@@ -381,8 +457,9 @@ class Postie {
         $this->show_filters_for('wp_handle_sideload_prefilter');
         $this->show_filters_for('pre_move_uploaded_file');
 
+        $max_memory = defined('WP_MAX_MEMORY_LIMIT') ? WP_MAX_MEMORY_LIMIT : '256M';
         // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
-        DebugEcho("image memory limit: " . apply_filters('image_memory_limit', WP_MAX_MEMORY_LIMIT), $force_display);
+        DebugEcho("image memory limit: " . apply_filters('image_memory_limit', $max_memory), $force_display);
 
         DebugEcho("DISABLE_WP_CRON: " . (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON === true ? 'On' : 'Off'), $force_display);
         DebugEcho("ALTERNATE_WP_CRON: " . (defined('ALTERNATE_WP_CRON') && ALTERNATE_WP_CRON === true ? 'On' : 'Off'), $force_display);
@@ -465,6 +542,37 @@ class Postie {
         }
     }
 
+    public static function redact_trace(Throwable $e, $password = '') {
+        $trace = $e->getTraceAsString();
+        if (empty($password)) {
+            $config = postie_config_read();
+            if (!empty($config->mail_password)) {
+                $password = $config->mail_password;
+            }
+        }
+        if (!empty($password) && is_string($password)) {
+            $trace = str_replace($password, '********', $trace);
+            $max_len = intval(ini_get('zend.exception_string_param_max_len'));
+            if ($max_len <= 0) {
+                $max_len = 15;
+            }
+            if (strlen($password) > $max_len) {
+                $trace = str_replace(substr($password, 0, $max_len) . '...', '********', $trace);
+            }
+            if (strlen($password) > 15) {
+                $trace = str_replace(substr($password, 0, 15) . '...', '********', $trace);
+            }
+        }
+        return $trace;
+    }
+
+    function log_trace(Throwable $e, $password = '', $context = '') {
+        $trace = self::redact_trace($e, $password);
+        $prefix = !empty($context) ? "Postie [error]: $context trace:\n" : "Postie [error]: Exception trace:\n";
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log($prefix . $trace);
+    }
+
     function log_error($v) {
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         error_log("Postie [error]: $v");
@@ -535,63 +643,118 @@ class Postie {
             DebugEcho("Postie server: " . $config->mail_server, true);
             DebugEcho("Postie port: " . $config->mail_server_port, true);
 
-            if (!$config->mail_server || !$config->mail_server_port || !$config->mail_userid) {
-                EchoError("FAIL - server settings not complete");
-            }
-
-            $conninfo = $this->connection_info($config);
-            if (self::is_debugmode()) {
-                fCore::enableDebugging(true);
-                fCore::registerDebugCallback('DebugEcho');
-            }
-
-            switch (strtolower($config->input_protocol)) {
-                case 'imap':
-                case 'imap-ssl':
-                    try {
-                        if ($config->input_connection == 'curl') {
-                            $conn = new pCurlConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
-                        } else {
-                            $conn = new pSocketConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
-                        }
-                        $srv = new pImapMailServer($conn);
-                        $mailbox = new fMailbox('imap', $conn, $srv);
-                        $m = $mailbox->countMessages();
-                        DebugEcho("Successful " . strtoupper($config->input_protocol) . " connection on port {$config->mail_server_port}", true);
-                        DebugEcho("# of waiting messages: $m", true);
-                        $mailbox->close();
-                    } catch (Throwable $e) {
-                        EchoError("Unable to connect. The server said: " . $e->getMessage());
-                    }
-                    break;
-
-                case 'pop3':
-                case 'pop3-ssl':
-                    try {
-                        if ($config->input_connection == 'curl') {
-                            $conn = new pCurlConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'), 30);
-                        } else {
-                            $conn = new pSocketConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
-                        }
-                        $srv = new pPop3MailServer($conn);
-                        $mailbox = new fMailbox('pop3', $conn, $srv);
-                        $m = $mailbox->countMessages();
-                        DebugEcho("Successful " . strtoupper($config->input_protocol) . " connection on port {$config->mail_server_port}", true);
-                        DebugEcho("# of waiting messages: $m", true);
-                        $mailbox->close();
-                    } catch (Throwable $e) {
-                        EchoError("Unable to connect. The server said:");
-                        EchoError($e->getMessage());
-                    }
-                    break;
-                default:
-                    EchoError("Unable to connect. Invalid setup");
-                    break;
-            }
+            $this->run_config_test();
             ?>
         </div>
         <?php
         DebugEcho("Test complete");
+    }
+
+    function run_config_test() {
+        $config = postie_config_read();
+        $this->setup_logging($config);
+
+        $wptz = get_option('gmt_offset');
+        $wptzs = get_option('timezone_string');
+        $offsetdate = strtotime(current_time('mysql')) + ($config->use_time_offset ? $config->time_offset * 3600 : 0);
+
+        $result = array(
+            'connect_success' => false,
+            'connection_msg'  => '',
+            'message_count'   => 0,
+            'server_settings' => array(
+                'server'     => $config->mail_server,
+                'port'       => $config->mail_server_port,
+                'user'       => $config->mail_userid,
+                'protocol'   => $config->input_protocol,
+                'connection' => $config->input_connection,
+            ),
+            'clock' => array(
+                'timezone'     => $wptzs ? "$wptzs ($wptz)" : "$wptz",
+                'current_time' => current_time('mysql'),
+                'gmt_time'     => current_time('mysql', 1),
+                'offset'       => $config->time_offset,
+                'post_time'    => gmdate('Y-m-d H:i:s', $offsetdate),
+            ),
+            'environment' => array(
+                'os'          => PHP_OS,
+                'php_version' => phpversion(),
+                'wp_version'  => get_bloginfo('version'),
+                'charset'     => ini_get('default_charset') ? ini_get('default_charset') : 'UTF-8',
+            ),
+            'errors' => array(),
+        );
+
+        if (!$config->mail_server || !$config->mail_server_port || !$config->mail_userid) {
+            $msg = __("Server settings not complete. Please check server, port, and user ID.", 'postie');
+            EchoError("FAIL - $msg");
+            $result['errors'][] = $msg;
+            return $result;
+        }
+
+        $conninfo = $this->connection_info($config);
+        if (self::is_debugmode()) {
+            fCore::enableDebugging(true);
+            fCore::registerDebugCallback('DebugEcho');
+        }
+
+        switch (strtolower($config->input_protocol)) {
+            case 'imap':
+            case 'imap-ssl':
+                try {
+                    if ($config->input_connection == 'curl') {
+                        $conn = new pCurlConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
+                    } else {
+                        $conn = new pSocketConnection('imap', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
+                    }
+                    $srv = new pImapMailServer($conn);
+                    $mailbox = new fMailbox('imap', $conn, $srv);
+                    $m = $mailbox->countMessages();
+                    $result['connect_success'] = true;
+                    $result['message_count'] = $m;
+                    $result['connection_msg'] = sprintf(__("Successful %s connection on port %s", 'postie'), strtoupper($config->input_protocol), $config->mail_server_port);
+                    DebugEcho($result['connection_msg'], true);
+                    DebugEcho(sprintf(__("# of waiting messages: %d", 'postie'), $m), true);
+                    $mailbox->close();
+                } catch (Throwable $e) {
+                    $msg = sprintf(__("Unable to connect. The server said: %s", 'postie'), $e->getMessage());
+                    EchoError($msg);
+                    $result['errors'][] = $msg;
+                }
+                break;
+
+            case 'pop3':
+            case 'pop3-ssl':
+                try {
+                    if ($config->input_connection == 'curl') {
+                        $conn = new pCurlConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'), 30);
+                    } else {
+                        $conn = new pSocketConnection('pop3', $conninfo['mail_server'], $conninfo['mail_user'], $conninfo['mail_password'], $conninfo['mail_port'], ($conninfo['mail_protocol'] == 'imap-ssl' || $conninfo['mail_protocol'] == 'pop3-ssl'));
+                    }
+                    $srv = new pPop3MailServer($conn);
+                    $mailbox = new fMailbox('pop3', $conn, $srv);
+                    $m = $mailbox->countMessages();
+                    $result['connect_success'] = true;
+                    $result['message_count'] = $m;
+                    $result['connection_msg'] = sprintf(__("Successful %s connection on port %s", 'postie'), strtoupper($config->input_protocol), $config->mail_server_port);
+                    DebugEcho($result['connection_msg'], true);
+                    DebugEcho(sprintf(__("# of waiting messages: %d", 'postie'), $m), true);
+                    $mailbox->close();
+                } catch (Throwable $e) {
+                    $msg = sprintf(__("Unable to connect. The server said: %s", 'postie'), $e->getMessage());
+                    EchoError($msg);
+                    $result['errors'][] = $msg;
+                }
+                break;
+
+            default:
+                $msg = __("Unable to connect. Invalid setup", 'postie');
+                EchoError($msg);
+                $result['errors'][] = $msg;
+                break;
+        }
+
+        return $result;
     }
 }
 

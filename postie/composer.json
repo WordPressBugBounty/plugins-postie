@@ -18,9 +18,11 @@
     "scripts": {
         "phpcs": "tools/vendor/bin/phpcs -p . --standard=WordPress --ignore=vendor/,test/,tools/",
         "phpcompat": "tools/vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/,tools/",
+        "test:js": "node --test test/postie-admin.test.js",
         "test": [
             "@phpcompat",
-            "tools/vendor/bin/phpunit"
+            "tools/vendor/bin/phpunit",
+            "@test:js"
         ]
     }
 }

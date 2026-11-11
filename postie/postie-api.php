@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-config.class.php');
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie.class.php');
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-message.php');
+require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-tags.php');
 
 /*
  * These are the only official public methods for accessing postie functionality
@@ -13,12 +14,12 @@ require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'postie-message.php');
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function lookup_taxonomy($termid) {
-    return postie_lookup_taxonomy_name($termid);
+    return PostieTag::postie_lookup_taxonomy_name($termid);
 }
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 function lookup_category($trial_category, $category_match) {
-    return postie_lookup_category_id($trial_category, $category_match);
+    return PostieTag::postie_lookup_category_id($trial_category, $category_match);
 }
 
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
@@ -111,6 +112,7 @@ function postie_get_mail() {
     //error_log("check_postie");
     global $g_postie;
     if (!empty($g_postie)) {
-        $g_postie->get_mail();
+        return $g_postie->get_mail();
     }
+    return null;
 }

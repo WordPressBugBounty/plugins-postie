@@ -16,9 +16,12 @@
 *   **`postie.php`**: Main plugin file. Handles initialization, hooks, and cron scheduling.
 *   **`postie.class.php`**: Core logic class (`Postie`) for fetching and processing emails.
 *   **`postie-config.class.php`**: Contains the strongly-typed `PostieSettings` DTO class and the `PostieConfig` manager class, which loads, sanitizes, and validates settings.
+*   **`postie-compatibility.php`**: Contains `PostieCompatibility` class encapsulating compatibility helpers (`file_get_html`, `str_get_html`, `mb_str_replace`, `fnmatch`, `boolval`).
+*   **`postie-filters.php`**: Contains `PostieFilter` class providing static methods for content filtering, signatures, and placeholders.
+*   **`postie-tags.php`**: Contains `PostieTag` class providing static methods for tags, categories, taxonomies, and inline email commands.
+*   **`postie-api.php`**: The official public procedural API for Postie (e.g., `lookup_category`, `postie_get_mail`, `DebugEcho`).
 *   **`lib/`**: Contains bundled dependencies:
     *   **Flourish Library** (`fMailbox.php`, `fEmail.php`, etc.): Used for email protocol handling.
-    *   **`simple_html_dom.php`**: For parsing and manipulating HTML content.
 *   **`templates/`**: PHP templates used to render attachments (e.g., `image_templates.php`, `video1_templates.php`).
 *   **`test/`**: Unit tests and test helpers.
     *   `bootstrap.php`: Test bootstrapper.
@@ -40,8 +43,9 @@ Because Postie is distributed as a standard WordPress plugin, end-users install 
 3.  Configure mail server settings under the **Postie** menu.
 
 ### Execution
-*   **Scheduled:** Runs via WordPress Cron (configurable intervals).
-*   **Manual Trigger:** `http://<your-site>/?postie=get-mail`
+*   **Scheduled:** Runs via WordPress Cron (`check_postie_hook` at configurable intervals).
+*   **External / System Cron:** Trigger via WordPress Cron: `http://<your-site>/wp-cron.php?doing_wp_cron` or WP-CLI (`wp cron event run check_postie_hook`).
+*   **Manual Trigger:** Use the "Check for mail manually" button in the WordPress Admin under **Postie**.
 *   **Debug Mode:** Can be enabled in settings to log detailed output.
 
 ## Development and Testing
@@ -67,6 +71,10 @@ To keep the root `vendor/` directory production-only and lightweight, all develo
 *   **Running Linter Separately:** To run only the PHP 7.0 compatibility scanner:
     ```bash
     tools/vendor/bin/phpcs -p . --standard=PHPCompatibility --runtime-set testVersion 7.0 --runtime-set ignore_warnings_on_exit true --ignore=vendor/,test/,tools/
+    ```
+*   **Running JavaScript Tests:** To run the frontend unit test suite (zero-dependency using Node.js native test runner):
+    ```bash
+    node --test test/postie-admin.test.js
     ```
 
 ### Conventions
@@ -110,7 +118,7 @@ Adding a new configuration setting is a clean and structured process:
     ```php
     ', ' => array(..., 'my_new_setting')
     ```
-5.  **Render the HTML Option Field** (`config_form_*.php`):
+5.  **Render the HTML Option Field** (`admin/views/tabs/tab-*.php`):
     Create your input field in the relevant admin config page sub-template, using standard `postie-settings[...]` array inputs:
     ```html
     <input type="checkbox" name="postie-settings[my_new_setting]" value="yes" <?php checked($my_new_setting); ?> />
@@ -144,4 +152,4 @@ Releasing a new version is a streamlined process guided by the deployment config
 ## Key Files to Watch
 *   `postie.php`: Entry point.
 *   `postie-functions.php`: Helper functions (if applicable, though logic seems distributed in classes).
-*   `config_form.php`: Renders the settings page in WP Admin.
+*   `admin/views/settings-page.php`: Renders the settings page in WP Admin (root `config_form.php` serves as backward-compatible wrapper).

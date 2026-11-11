@@ -353,101 +353,22 @@ class PostieConfig {
         include('templates/image_templates.php');
         include('templates/video1_templates.php');
         include('templates/video2_templates.php');
-        include 'templates/general_template.php';
-        return array(
-            'add_meta' => 'no',
-            'admin_username' => 'admin',
-            'allow_html_in_body' => true,
-            'allow_html_in_subject' => true,
-            'allow_subject_in_mail' => true,
-            'audiotemplate' => $simple_link,
-            'audiotypes' => array('m4a', 'mp3', 'ogg', 'wav', 'mpeg'),
-            'authorized_addresses' => array(),
-            'banned_files_list' => array(),
-            'confirmation_email' => '',
-            'convertnewline' => false,
-            'converturls' => true,
-            'custom_image_field' => false,
-            'default_post_category' => NULL,
-            'category_match' => true,
-            'default_post_tags' => array(),
-            'default_title' => "Live From The Field",
-            'delete_mail_after_processing' => true,
-            'drop_signature' => true,
-            'filternewlines' => true,
-            'forward_rejected_mail' => true,
-            'icon_set' => 'silver',
-            'icon_size' => 32,
-            'auto_gallery' => false,
-            'image_new_window' => false,
-            'image_placeholder' => '#img%#',
-            'images_append' => true,
-            'imagetemplate' => $wordpress_default,
-            'imagetemplates' => $imageTemplates,
-            'input_protocol' => 'pop3',
-            'input_connection' => 'sockets',
-            'interval' => 'twiceperhour',
-            'mail_server' => NULL,
-            'mail_server_port' => 110,
-            'mail_userid' => NULL,
-            'mail_password' => NULL,
-            'maxemails' => 0,
-            'message_start' => '',
-            'message_end' => '',
-            'message_encoding' => 'UTF-8',
-            'message_dequote' => true,
-            'post_status' => 'publish',
-            'prefer_text_type' => 'plain',
-            'return_to_sender' => false,
-            'role_access' => array(),
-            'selected_audiotemplate' => 'simple_link',
-            'selected_imagetemplate' => 'wordpress_default',
-            'selected_video1template' => 'vshortcode',
-            'selected_video2template' => 'simple_link',
-            'shortcode' => false,
-            'sig_pattern_list' => array('--\s?[\r\n]?', '--\s', '--', '---'),
-            'smtp' => array(),
-            'start_image_count_at_zero' => false,
-            'supported_file_types' => array('application'),
-            'turn_authorization_off' => false,
-            'time_offset' => get_option('gmt_offset'),
-            'video1template' => $simple_link,
-            'video1types' => array('mp4', 'mpeg4', '3gp', '3gpp', '3gpp2', '3gp2', 'mov', 'mpeg', 'quicktime'),
-            'video2template' => $simple_link,
-            'video2types' => array('x-flv'),
-            'video1templates' => $video1Templates,
-            'video2templates' => $video2Templates,
-            'wrap_pre' => 'no',
-            'featured_image' => false,
-            'include_featured_image' => true,
-            'email_tls' => false,
-            'post_format' => 'standard',
-            'post_type' => 'post',
-            'generaltemplates' => $generalTemplates,
-            'generaltemplate' => $postie_default,
-            'selected_generaltemplate' => 'postie_default',
-            'generate_thumbnails' => true,
-            'reply_as_comment' => true,
-            'force_user_login' => false,
-            'auto_gallery_link' => 'default',
-            'ignore_mail_state' => false,
-            'strip_reply' => true,
-            'postie_log_error' => true,
-            'postie_log_debug' => false,
-            'category_colon' => true,
-            'category_dash' => true,
-            'category_bracket' => true,
-            'prefer_text_convert' => true,
-            'category_remove' => true,
-            'ignore_email_date' => false,
-            'use_time_offset' => false,
-            'postie_log_error_notify' => '(All Admins)',
-            'image_resize' => true,
-            'duplicate_comments' => true,
-            'legacy_commands' => true,
-            'add_wrapper_div' => true,
-            'keep_unknown_emails_as_draft' => true
-        );
+        include('templates/general_template.php');
+
+        $defaults = get_class_vars('PostieSettings');
+
+        $defaults['audiotemplate'] = $simple_link;
+        $defaults['imagetemplate'] = $wordpress_default;
+        $defaults['imagetemplates'] = $imageTemplates;
+        $defaults['time_offset'] = get_option('gmt_offset');
+        $defaults['video1template'] = $simple_link;
+        $defaults['video2template'] = $simple_link;
+        $defaults['video1templates'] = $video1Templates;
+        $defaults['video2templates'] = $video2Templates;
+        $defaults['generaltemplates'] = $generalTemplates;
+        $defaults['generaltemplate'] = $postie_default;
+
+        return $defaults;
     }
 
     /**
