@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <th scope="row"><?php esc_html_e('Video 1 file extensions', 'postie') ?></th> 
             <td>
                 <br/><input name='postie-settings[video1types]' type="text" id='postie-settings-video1types'
-                            value="<?php if ($settings->video1types != '') echo esc_attr($settings->video1types); ?>" size="40" />                
+                            value="<?php echo esc_attr(is_array($settings->video1types) ? implode(', ', $settings->video1types) : $settings->video1types); ?>" size="40" />                
                 <p class='description'>
                     <?php esc_html_e('Use video template 1 for files with these extensions (separated by commas)', 'postie') ?></p>
             </td> 
@@ -56,7 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <th scope="row"><?php esc_html_e('Video 2 file extensions', 'postie') ?></th> 
             <td>
                 <br/><input name='postie-settings[video2types]' type="text" id='postie-settings-video2types'
-                            value="<?php if ($settings->video2types != '') echo esc_attr($settings->video2types); ?>" size="40" />                
+                            value="<?php echo esc_attr(is_array($settings->video2types) ? implode(', ', $settings->video2types) : $settings->video2types); ?>" size="40" />                
                 <p class='description'>
                     <?php esc_html_e('Use video template 2 for files with these extensions (separated by commas)', 'postie') ?></p>
             </td> 
@@ -84,7 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <tr> 
             <th scope="row"><?php esc_html_e('Audio file extensions', 'postie') ?></th> 
             <td>
-                <input name='postie-settings[audiotypes]' type="text" id='postie-settings-audiotypes' value="<?php echo esc_attr($settings->audiotypes); ?>" size="40" />
+                <input name='postie-settings[audiotypes]' type="text" id='postie-settings-audiotypes' value="<?php echo esc_attr(is_array($settings->audiotypes) ? implode(', ', $settings->audiotypes) : $settings->audiotypes); ?>" size="40" />
                 <p class='description'><?php esc_html_e('Use the audio template for files with these extensions (separated by commas)', 'postie') ?></p>
             </td> 
         </tr> 

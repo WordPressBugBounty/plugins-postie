@@ -40,7 +40,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <?php esc_html_e('Default tag(s)', 'postie') ?><br />
             </th>
             <td>
-                <input type='text' name='postie-settings[default_post_tags]' id='postie-settings-default_post_tags' value='<?php echo esc_attr($settings->default_post_tags) ?>' />
+                <input type='text' name='postie-settings[default_post_tags]' id='postie-settings-default_post_tags' value='<?php echo esc_attr(is_array($settings->default_post_tags) ? implode(', ', $settings->default_post_tags) : $settings->default_post_tags) ?>' />
                 <p class='description'><?php esc_html_e('(optional) separated by commas', 'postie') ?></p>
             </td>
         </tr>
@@ -65,7 +65,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <select name='postie-settings[post_format]' id='postie-settings-post_format'>
                     <?php
                     $formats = (array) get_theme_support('post-formats');
-                    if (is_array($formats[0])) {
+                    if (isset($formats[0]) && is_array($formats[0])) {
                         $formats = $formats[0];
                     } else {
                         $formats = array();

@@ -33,18 +33,16 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
-= 1.9.90 (2026-11-09) =
-* Global Function Encapsulation & Conflict Resolution
-* Late Escaping & Variable Safety in config_form_support.php
-* Edge-Case & Code Review Fixes
-* Redact passwords from exception traces and suppress stack traces in on-screen output
-* Remove obsolete get_mail.php, URL query_vars/parse_request triggers, and dead cronless action branch
+= 1.9.91 (2026-11-12) =
+* Settings & UI Rendering Resilience
 
 = 1.9.90 (2026-11-11) =
 * Settings Page Reorganization & Architecture
 * Modern AJAX Modal for Admin Actions
 * Security Hardening & Edge-Case Resilience
-* Global Namespace Encapsulation & Legacy Code Removal
+* Global Namespace Encapsulation 
+* Remove obsolete get_mail.php, URL query_vars/parse_request triggers, and dead cronless action branch
+* Redact passwords from exception traces and suppress stack traces in on-screen output
 
 = 1.9.89 (2026-11-05) =
 * PHP 8.5 compatibility

@@ -49,17 +49,6 @@ if (empty($config)) {
     $config = $pconfig->reset_to_default();
 }
 
-$arrays = $pconfig->arrayed_settings();
-// some fields are stored as arrays, because that makes back-end processing much easier
-// and we need to convert those fields to strings here, for the options form
-foreach ($arrays as $sep => $fields) {
-    foreach ($fields as $field) {
-        if (isset($config[$field]) && is_array($config[$field])) {
-            $config[$field] = implode($sep, $config[$field]);
-        }
-    }
-}
-
 if (!isset($config['maxemails'])) {
     DebugEcho(__("New setting: maxemails", 'postie'));
     $config['maxemails'] = 0;

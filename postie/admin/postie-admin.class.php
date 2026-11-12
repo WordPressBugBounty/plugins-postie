@@ -49,10 +49,19 @@ class PostieAdmin {
         $html = "<tr><th scope='row'><label for='" . esc_attr($element_id) . "'>" . esc_html($label) . "</label></th>";
 
         $html .= "<td><br /><textarea cols=40 rows=3 name='" . esc_attr($id) . "' id='" . esc_attr($element_id) . "'>";
-        $current_value = preg_split("/[\r\n]+/", esc_attr(trim($current_value)));
         if (is_array($current_value)) {
-            foreach ($current_value as $item) {
-                $html .= "$item\n";
+            $current_value = implode("\n", $current_value);
+        }
+        $trimmed = trim((string)$current_value);
+        if ($trimmed !== '') {
+            $items = preg_split("/[\r\n]+/", esc_attr($trimmed));
+            if (is_array($items)) {
+                foreach ($items as $item) {
+                    $item = trim($item);
+                    if ($item !== '') {
+                        $html .= "$item\n";
+                    }
+                }
             }
         }
         $html .= "</textarea>";
