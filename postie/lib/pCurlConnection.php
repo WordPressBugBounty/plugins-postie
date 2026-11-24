@@ -144,4 +144,73 @@ class pCurlConnection extends pConnection {
     public function isPersistant() {
         return false;
     }
+
+    public function buildFetchUrl($uid) {
+        if ($this->type == 'imap') {
+            $mailbox = trim($this->mailbox, '/');
+            if ($mailbox === '') {
+                $mailbox = 'INBOX';
+            }
+            return ($this->secure ? 'imaps' : 'imap') . '://' . $this->host . '/' . $mailbox . '/;UID=' . $uid;
+        }
+
+        return ($this->secure ? 'pop3s' : 'pop3') . '://' . $this->host . '/' . $uid;
+    }
+
+    public function fetchMessageSource($uid) {
+        $url = $this->buildFetchUrl($uid);
+        return $this->executeFetch($url, $uid);
+    }
+
+    protected function executeFetch($url, $uid) {
+        DebugEcho("curl fetch: $url");
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_USERPWD, "$this->username:$this->password");
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_PORT, $this->port);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+
+        $fp = fopen('php://temp', 'w+');
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use ($fp) {
+            return fwrite($fp, $data);
+        });
+
+        $headers = array();
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $header) use (&$headers) {
+            $headers[] = $header;
+            return strlen($header);
+        });
+
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        $verbose = fopen('php://temp', 'w+');
+        curl_setopt($ch, CURLOPT_STDERR, $verbose);
+
+        $res = curl_exec($ch);
+
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+        DebugEcho("curl log: $verboseLog");
+        fclose($verbose);
+
+        if (false === $res) {
+            $error = curl_error($ch);
+            $errno = curl_errno($ch);
+            DebugEcho("Curl fetch error: $error ($errno)");
+            fclose($fp);
+            curl_close($ch);
+            throw new fConnectivityException('Unable to fetch message %1$s from %2$s server %3$s on port %4$s: %5$s', $uid, strtoupper($this->type), $this->host, $this->port, $error);
+        }
+
+        curl_close($ch);
+
+        rewind($fp);
+        $message = stream_get_contents($fp);
+        fclose($fp);
+
+        return $message;
+    }
 }

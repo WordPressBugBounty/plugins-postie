@@ -4,7 +4,7 @@
   Plugin Name: Postie
   Plugin URI: http://PostiePlugin.com/
   Description: Create posts via email. Significantly upgrades the Post by Email features of WordPress.
-  Version: 1.9.91
+  Version: 1.9.92
   Author: Wayne Allen
   Author URI: http://PostiePlugin.com/
   License: GPL3
@@ -28,7 +28,7 @@
  */
 
 /*
-  $Id: postie.php 3798962 2026-11-12 17:43:21Z WayneAllen $
+  $Id: postie.php 3821111 2026-11-24 17:30:41Z WayneAllen $
  */
 
 if (!defined('WPINC')) {
@@ -49,6 +49,8 @@ require_once(__DIR__ . DIRECTORY_SEPARATOR . 'postie-api.php');
 if (!class_exists('PostieInit')) {
 
     class PostieInit {
+
+        private static $is_logging_query = false;
 
         public function __construct() {
             //WordPress Actions
@@ -145,8 +147,13 @@ if (!class_exists('PostieInit')) {
         }
 
         function query_filter($query) {
-            if (Postie::is_debugmode()) {
-                DebugEcho("Query: $query");
+            if (!self::$is_logging_query && Postie::is_debugmode()) {
+                self::$is_logging_query = true;
+                try {
+                    DebugEcho("Query: $query");
+                } finally {
+                    self::$is_logging_query = false;
+                }
             }
 
             return $query;
@@ -318,6 +325,7 @@ if (!class_exists('PostieInit')) {
 
             $raw_output = ob_get_clean();
             remove_action('postie_log_debug', $log_collector);
+            remove_filter('query', array($this, 'query_filter'));
 
             $duration = round(microtime(true) - $start_time, 2);
 
@@ -390,6 +398,7 @@ if (!class_exists('PostieInit')) {
 
             $raw_output = ob_get_clean();
             remove_action('postie_log_debug', $log_collector);
+            remove_filter('query', array($this, 'query_filter'));
 
             $duration = round(microtime(true) - $start_time, 2);
 

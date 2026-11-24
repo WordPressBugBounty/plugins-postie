@@ -7,7 +7,7 @@ Tags: e-mail, email, post-by-email
 Requires PHP: 7.0
 Requires at least: 5.6
 Tested up to: 7.1
-Stable tag: 1.9.91
+Stable tag: 1.9.92
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,6 +105,14 @@ All script, style and body tags are stripped from html emails.
 Attachments are now processed in the order they were attached.
 
 == CHANGELOG ==
+= 1.9.92 (2026-11-24) =
+* Fix query logging recursion and out-of-memory errors via re-entrancy guard
+* Suppress on-screen debug output during AJAX requests to prevent JSON response corruption in admin modal dialogs
+* Unhook database query filter after manual email processing and configuration tests
+* Use native message retrieval in cURL connection to prevent response header limit on large emails
+* Fix multiple attachments with empty Content-ID headers overwriting each other
+* Prevent stored XSS in do_shortcodes by avoiding quote entity decoding
+
 = 1.9.91 (2026-11-12) =
 * Settings & UI Rendering Resilience
 

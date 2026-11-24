@@ -86,6 +86,7 @@ To keep the root `vendor/` directory production-only and lightweight, all develo
     *   **NO** union types, arrow functions (`fn()`), match expressions, or `??=` operators.
     *   Scalar type hints in function parameters (e.g., `string`, `int`, `bool`, `array`) and scalar/array return typehints (e.g., `: bool`, `: array`, `: string`) are supported in PHP 7.0 and are permitted.
 *   **Hooks:** Extensive use of `add_filter` and `add_action`. New features should likely use these hooks rather than modifying core logic where possible.
+*   **Variable Scope & Naming:** Avoid global variables whenever possible; prefer class-level attributes (properties) instead. If a global variable is strictly necessary, it must include `postie` in its name (e.g., `$g_postie`, `$g_postie_init`, `$postie_post`) to prevent namespace collisions with WordPress core or other plugins.
 *   **Configuration:** Settings are stored in the WP options table (`postie-settings`) and managed via the `PostieConfig` class. The configuration is accessed globally via `postie_config_read()`, which returns a strongly-typed `PostieSettings` DTO. This DTO implements `ArrayAccess` to maintain complete backwards compatibility with legacy array lookups (e.g., `$config['post_type']`), but direct, strongly-typed property accesses (e.g., `$config->post_type`) should be used for all new development.
 
 ## Adding a New Setting

@@ -496,6 +496,9 @@ class PostieFilter {
         if (count($email['related'])) {
             DebugEcho("filter_ReplaceImageCIDs: # CID attachments: " . count($email['related']));
             foreach ($email['related'] as $cid => &$attachment) {
+                if ($cid === '' || $cid === 'cid:' || trim($cid) === 'cid:') {
+                    continue;
+                }
                 if (false !== stripos($content, $cid)) {
                     DebugEcho("filter_ReplaceImageCIDs: CID: $cid");
                     if (isset($attachment['wp_id'])) {

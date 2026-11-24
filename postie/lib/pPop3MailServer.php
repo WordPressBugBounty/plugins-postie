@@ -28,6 +28,11 @@ class pPop3MailServer extends pMailServer {
     }
 
     public function fetchMessageSource($uid) {
+        $source = $this->connection->fetchMessageSource($uid);
+        if ($source !== null) {
+            return $source;
+        }
+
         $response = $this->connection->write('RETR ' . $uid);
         array_shift($response);
         $response = join("\r\n", $response);

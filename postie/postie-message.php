@@ -84,12 +84,7 @@ class PostieMessage {
         global $postie_post;
         $postie_post = $details;
 
-        //fix quoting
         $content = $postie_post['post_content'];
-        $char = array('&quot;', '&#8216;', '&#8217;', '&#8220;', '&#8221;', '&#8242;', '&#8243;');
-        $replace = array('"', "'", "'", '"', '"', "'", '"');
-        $content = str_replace($char, $replace, $content);
-
         $newcontent = do_shortcode($content);
         $details = $postie_post; // need to copy values back in case a shortcode modified them
         $details['post_content'] = $newcontent;

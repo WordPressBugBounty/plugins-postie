@@ -72,6 +72,11 @@ class pImapMailServer extends pMailServer {
 
     function fetchMessageSource($uid) {
 
+        $source = $this->connection->fetchMessageSource($uid);
+        if ($source !== null) {
+            return $source;
+        }
+
         $response = $this->connection->write('UID FETCH ' . $uid . ' (BODY[])');
 
         $j = 0;

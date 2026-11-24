@@ -297,12 +297,20 @@ class fMailbox {
         }
 
         // This indicates a content-id which is used for multipart/related
-        if ($structure['content_id'] && $structure['type'] != 'text') {
+        $cid = '';
+        if (!empty($structure['content_id'])) {
+            $cid = trim($structure['content_id']);
+            if (substr($cid, 0, 1) === '<' && substr($cid, -1) === '>') {
+                $cid = substr($cid, 1, -1);
+            }
+            $cid = trim($cid);
+        }
+
+        if ($cid !== '' && $structure['type'] != 'text') {
             //DebugEcho('handlePart: multipart/related: ' . $structure['content_id']);
             if (!isset($info['related'])) {
                 $info['related'] = array();
             }
-            $cid = $structure['content_id'][0] == '<' ? substr($structure['content_id'], 1, -1) : $structure['content_id'];
             //DebugEcho("handlePart: cid: $cid ($filename) {$structure['type']}/{$structure['subtype']}");
             $info['related']['cid:' . $cid] = array(
                 'filename' => $filename,
@@ -812,11 +820,22 @@ class fMailbox {
             //DebugEcho('parseStructure: multipart');
             //DebugDump($structure);
         } else {
+            $content_id = isset($headers['content-id']) ? trim($headers['content-id']) : NULL;
+            if ($content_id !== NULL) {
+                $clean_cid = $content_id;
+                if (substr($clean_cid, 0, 1) === '<' && substr($clean_cid, -1) === '>') {
+                    $clean_cid = substr($clean_cid, 1, -1);
+                }
+                if (trim($clean_cid) === '') {
+                    $content_id = NULL;
+                }
+            }
+
             $structure = array(
                 'type' => $type,
                 'type_fields' => !empty($headers['content-type']['fields']) ? $headers['content-type']['fields'] : array(),
                 'subtype' => $subtype,
-                'content_id' => isset($headers['content-id']) ? $headers['content-id'] : NULL,
+                'content_id' => $content_id,
                 'encoding' => isset($headers['content-transfer-encoding']) ? strtolower($headers['content-transfer-encoding']) : '8bit',
                 'disposition' => isset($headers['content-disposition']) ? strtolower($headers['content-disposition']['value']) : NULL,
                 'disposition_fields' => isset($headers['content-disposition']) ? $headers['content-disposition']['fields'] : array());

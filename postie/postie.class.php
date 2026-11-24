@@ -535,6 +535,9 @@ class Postie {
     }
 
     function log_onscreen($data) {
+        if ((function_exists('wp_doing_ajax') && wp_doing_ajax()) || (defined('DOING_AJAX') && DOING_AJAX)) {
+            return;
+        }
         if (php_sapi_name() == 'cli') {
             echo esc_html($data) . "\n";
         } else {

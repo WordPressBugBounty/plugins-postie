@@ -56,6 +56,10 @@ abstract class pConnection {
 
     abstract function isPersistant();
 
+    public function fetchMessageSource($uid) {
+        return null;
+    }
+
     public function getMailbox() {
         return $this->mailbox;
     }
